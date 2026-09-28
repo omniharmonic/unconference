@@ -51,6 +51,8 @@ for (const width of [390,1440]) test(`signed-in home prioritizes joined gatherin
     const my=page.locator('#my-gatherings')
     const link=my.getByRole('link',{name:gathering.name,exact:true})
     await expect(link).toHaveAttribute('href',`/e/${gathering.slug}/dashboard`)
+    await expect(my.getByRole('link',{name:'Open gathering',exact:true})).toHaveAttribute('href',`/e/${gathering.slug}/dashboard`)
+    await expect(my.getByRole('link',{name:'Gathering page',exact:true})).toHaveAttribute('href',`/e/${gathering.slug}?view=about`)
     await expect(my.getByRole('link',{name:'Organizer workspace'})).toHaveCount(0)
     await link.click()
     await expect(page).toHaveURL(`${base}/e/${gathering.slug}/dashboard`)
@@ -62,13 +64,29 @@ for (const width of [390,1440]) test(`signed-in home prioritizes joined gatherin
     }
     await page.goto(`${base}/e/${gathering.slug}`)
     await expect(page).toHaveURL(`${base}/e/${gathering.slug}/dashboard`)
-    await page.goto(`${base}/e/${gathering.slug}?view=about`)
+    await page.goto(base)
+    await my.getByRole('link',{name:'Gathering page',exact:true}).click()
+    await expect(page).toHaveURL(`${base}/e/${gathering.slug}?view=about`)
     await expect(page.getByRole('heading',{name:gathering.name,exact:true})).toBeVisible()
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true)
     await page.screenshot({path:`/tmp/unconference-utility-about-${width}.png`,fullPage:true})
     await page.goto(base)
     await page.screenshot({path:`/tmp/unconference-utility-home-${width}.png`,fullPage:true})
-  } finally {await context.close()}
+    await db`update event_members set role='owner' where event_id=${gathering.id} and user_id=${account.id}`
+    await page.reload()
+    const organizer=my.getByRole('link',{name:'Organizer workspace',exact:true})
+    await expect(organizer).toHaveAttribute('href',`/e/${gathering.slug}/admin`)
+    const openBox=await my.getByRole('link',{name:'Open gathering',exact:true}).boundingBox()
+    const aboutBox=await my.getByRole('link',{name:'Gathering page',exact:true}).boundingBox()
+    const adminBox=await organizer.boundingBox()
+    expect(aboutBox!.y).toBeGreaterThanOrEqual(openBox!.y+openBox!.height)
+    expect(adminBox!.y).toBe(aboutBox!.y)
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true)
+    await page.screenshot({path:`/tmp/unconference-utility-organizer-home-${width}.png`,fullPage:true})
+  } finally {
+    await db`update event_members set role='attendee' where event_id=${gathering.id} and user_id=${account.id}`
+    await context.close()
+  }
 })
 
 test('anonymous visitors keep the promotional page',async({page})=>{

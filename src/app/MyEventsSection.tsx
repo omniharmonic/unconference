@@ -90,13 +90,18 @@ export async function MyEventsSection() {
                       </Link>
                     )}
 
-                    <div className="flex flex-wrap gap-2">
-                      <Button asChild variant="outline" size="sm" className="flex-1">
+                    <div className="space-y-2">
+                      <Button asChild size="sm" className="w-full min-h-11">
                         <Link href={`/e/${event.slug}/dashboard`}>Open gathering<ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" /></Link>
                       </Button>
-                      {['owner', 'admin'].includes(event.role) && <Button asChild size="sm" className="flex-1">
-                        <Link href={`/e/${event.slug}/admin`}>Organizer workspace</Link>
-                      </Button>}
+                      <div className={`grid gap-2 ${['owner', 'admin'].includes(event.role) ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                        <Button asChild variant="outline" size="sm" className="h-auto min-h-11 min-w-0 whitespace-normal px-2 py-2 text-xs leading-snug text-center">
+                          <Link href={`/e/${event.slug}?view=about`}>Gathering page</Link>
+                        </Button>
+                        {['owner', 'admin'].includes(event.role) && <Button asChild variant="outline" size="sm" className="h-auto min-h-11 min-w-0 whitespace-normal px-2 py-2 text-xs leading-snug text-center">
+                          <Link href={`/e/${event.slug}/admin`}>Organizer workspace</Link>
+                        </Button>}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
