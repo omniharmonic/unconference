@@ -6,7 +6,7 @@ import 'server-only'
  * credential. The rules are the ones already used for magic links and assistant tokens:
  * only the sha256 of the token is stored, the URL is shown once at mint time, and the feed
  * reads exactly what its owner can read — the sessions they have saved, in gatherings they
- * are still a member of. Revoking is immediate and is offered in Account → Notifications.
+ * are still a member of. Revoking is immediate and is offered in Account → Connections.
  *
  * The token is a bearer credential in a URL, which is why the feed is read-only, returns no
  * names but the person's own saved sessions, and is never used for anything else.

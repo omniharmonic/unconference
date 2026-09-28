@@ -56,8 +56,8 @@ for (const width of [390,1440]) test(`signed-in home prioritizes joined gatherin
     await expect(page).toHaveURL(`${base}/e/${gathering.slug}/dashboard`)
     await expect(page.getByTestId('workspace-context')).toHaveCount(0)
     if (width === 390) {
-      await page.getByTestId('mobile-tab-bar').locator('button').click()
-      await page.getByTestId('more-sheet').getByRole('link', {name:'My gatherings',exact:true}).click()
+      await page.getByTestId('mobile-tab-bar').locator('button[aria-controls]').click()
+      await page.getByTestId('more-navigation').getByRole('link', {name:'My gatherings',exact:true}).click()
       await expect(page.locator('#my-gatherings-heading')).toBeVisible()
     }
     await page.goto(`${base}/e/${gathering.slug}`)

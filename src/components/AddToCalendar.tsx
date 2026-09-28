@@ -122,7 +122,7 @@ export function AddToCalendar({
         {/*
           A download is a snapshot; a subscription keeps up. The gathering feed is the published
           schedule, so it needs no credential — the personal one (your saved sessions) lives
-          behind a revocable key in Account → Notifications.
+          behind a revocable key in Account → Connections.
         */}
         <DropdownMenuItem onClick={handleSubscribe}>
           <Rss className="mr-2 h-4 w-4" aria-hidden />
@@ -138,12 +138,14 @@ interface ExportScheduleButtonProps extends Pick<ButtonProps, 'variant' | 'size'
   eventName: string
   /** Whether to export favorites only */
   favoritesOnly?: boolean
+  compact?: boolean
 }
 
 export function ExportScheduleButton({
   eventSlug,
   eventName,
   favoritesOnly = false,
+  compact = false,
   variant = 'outline',
   size = 'default',
   className,
@@ -155,8 +157,8 @@ export function ExportScheduleButton({
 
   return (
     <Button variant={variant} size={size} className={className} onClick={handleDownload} title={`Download the ${eventName} schedule as .ics`}>
-      <Download className="mr-2 h-4 w-4" aria-hidden />
-      {favoritesOnly ? 'Export my schedule' : 'Export full schedule'}
+      <Download className={compact ? "hidden h-4 w-4 sm:block" : "mr-2 h-4 w-4"} aria-hidden />
+      {compact ? 'Export' : favoritesOnly ? 'Export my schedule' : 'Export full schedule'}
     </Button>
   )
 }

@@ -21,7 +21,6 @@ import {
   Bot,
   Copy,
   Check,
-  CalendarClock,
   Download,
   Trash2,
 } from 'lucide-react'
@@ -47,6 +46,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { apiFetch, ApiError } from '@/lib/api/client'
 import { HELP_PRIVACY, LEARN_MORE } from '@/lib/labels'
 import { cn } from '@/lib/utils'
+import { CalendarSubscriptions } from '@/components/CalendarSubscriptions'
 import { uploadAvatar } from '@/lib/storage/upload'
 
 /**
@@ -56,18 +56,18 @@ import { uploadAvatar } from '@/lib/storage/upload'
  *
  * Tabs
  *   Profile        name, photo, bio, organization, "What are you building?", "What I'm looking
- *                  for" (§6), messaging handle (§4 generic naming), interests, and what the
- *                  viewer shares in the gathering in view — directory listing, messaging handle
- *                  and email address, each the viewer's own per-gathering switch (design §3.3).
+ *                  for" (§6), messaging handle (§4 generic naming), and interests. Gathering sharing is managed in Preferences.
  *   Identity       handle/DID, "Re-sync from my Bluesky profile" (OAuth accounts), publish
  *                  proposals to my repo, take ownership (custodial), ENS.
- *   Notifications  a link to the per-gathering preferences page.
+ *   Connections    personal calendar subscriptions and AI assistants.
+ *   Preferences    notifications and per-gathering directory/contact/host sharing.
  *
  * Nothing auto-closes on save; dismissing with unsaved profile edits asks first.
  */
 
 interface SettingsModalProps {
   isOpen: boolean
+  initialTab?: AccountTab
   onClose: () => void
   /** The gathering the dialog is opened inside; falls back to the `[slug]` route param. */
   gathering?: { slug: string; name: string | null } | null
@@ -163,12 +163,13 @@ function utf8Hex(text: string): string {
   return `0x${Array.from(new TextEncoder().encode(text), (b) => b.toString(16).padStart(2, '0')).join('')}`
 }
 
-type AccountTab = 'profile' | 'identity' | 'notifications'
+export type AccountTab = 'profile' | 'identity' | 'connections' | 'preferences'
 
 const TABS: ReadonlyArray<{ value: AccountTab; label: string; icon: React.ComponentType<{ className?: string }> }> = [
   { value: 'profile', label: 'Profile', icon: User },
   { value: 'identity', label: 'Identity', icon: AtSign },
-  { value: 'notifications', label: 'Notifications', icon: Bell },
+  { value: 'connections', label: 'Connections', icon: Bot },
+  { value: 'preferences', label: 'Preferences', icon: Bell },
 ]
 
 function Field({
@@ -535,8 +536,8 @@ export function AccountPanel({ gathering, onDirtyChange, onCancel, active = true
   }
 
   return (
-    <div className="space-y-5">
-      <div role="tablist" aria-label="Account sections" className="flex gap-1 rounded-xl bg-muted/50 p-1" onKeyDown={onTabKeyDown}>
+    <div className="min-w-0 space-y-5 break-anywhere">
+      <div role="tablist" aria-label="Account sections" className="grid grid-cols-2 min-[380px]:grid-cols-4 gap-0.5 rounded-xl bg-muted/50 p-1" onKeyDown={onTabKeyDown}>
         {TABS.map(({ value, label, icon: Icon }) => (
           <button
             key={value}
@@ -548,12 +549,12 @@ export function AccountPanel({ gathering, onDirtyChange, onCancel, active = true
             tabIndex={tab === value ? 0 : -1}
             onClick={() => setTab(value)}
             className={cn(
-              'flex min-h-10 flex-1 items-center justify-center gap-2 rounded-lg px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+              'flex min-w-0 min-h-11 flex-col sm:flex-row items-center justify-center gap-1 rounded-lg px-0.5 text-xs min-[380px]:text-[11px] sm:text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
               tab === value ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'
             )}
           >
             <Icon className="h-4 w-4" aria-hidden="true" />
-            <span>{label}</span>
+            <span className="whitespace-nowrap">{label}</span>
           </button>
         ))}
       </div>
@@ -698,7 +699,7 @@ export function AccountPanel({ gathering, onDirtyChange, onCancel, active = true
               )}
             </div>
 
-            {gathering && <GatheringSharingSection slug={gathering.slug} name={gathering.name} />}
+
 
             {/* One row, and only on a browser that has an install to offer. */}
             <InstallAppRow className="flex min-h-11 w-full items-center gap-3 rounded-xl border-t px-3 text-left text-sm transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" />
@@ -878,13 +879,16 @@ export function AccountPanel({ gathering, onDirtyChange, onCancel, active = true
         {/* ENS saves on its own; setProfile (not applyProfile) keeps unsaved edits to the profile tab. */}
         {profile && <EnsSection profile={profile} onProfile={setProfile} />}
 
-        <AssistantConnections active={active} />
-
         <SubjectRights active={active} />
       </div>
 
-      {/* ── Notifications ── */}
-      <div id={`${tabId}-panel-notifications`} role="tabpanel" aria-labelledby={`${tabId}-tab-notifications`} hidden={tab !== 'notifications'} className="space-y-4">
+      <div id={`${tabId}-panel-connections`} role="tabpanel" aria-labelledby={`${tabId}-tab-connections`} hidden={tab !== 'connections'} className="min-w-0 space-y-6">
+        <CalendarSubscriptions active={active && tab === 'connections'} />
+        <AssistantConnections active={active && tab === 'connections'} />
+      </div>
+
+      {/* ── Preferences ── */}
+      <div id={`${tabId}-panel-preferences`} role="tabpanel" aria-labelledby={`${tabId}-tab-preferences`} hidden={tab !== 'preferences'} className="space-y-4">
         {gathering ? (
           <>
             <p className="text-sm text-muted-foreground">
@@ -893,7 +897,7 @@ export function AccountPanel({ gathering, onDirtyChange, onCancel, active = true
             <Button asChild variant="outline">
               <Link href={`/e/${gathering.slug}/settings/notifications`}>
                 <Bell className="h-4 w-4 mr-2" aria-hidden="true" />
-                Notification preferences for {gathering.name || 'this gathering'}
+                Notification preferences
               </Link>
             </Button>
           </>
@@ -904,7 +908,7 @@ export function AccountPanel({ gathering, onDirtyChange, onCancel, active = true
           </p>
         )}
 
-        <CalendarSubscriptions active={active} />
+        {gathering && <GatheringSharingSection slug={gathering.slug} name={gathering.name} />}
       </div>
     </div>
   )
@@ -919,7 +923,7 @@ interface AssistantToken {
 }
 
 /**
- * "Connect an AI assistant" (Account → Identity): mint, list and revoke the personal tokens that
+ * "Connect an AI assistant" (Account → Connections): mint, list and revoke the personal tokens that
  * let a member's own assistant read their gatherings through the MCP server at `/api/mcp`.
  *
  * The secret is shown exactly once, right after minting: the server stores only its hash. Nothing
@@ -1038,7 +1042,7 @@ function AssistantConnections({ active }: { active: boolean }) {
       <div className="rounded-lg border border-border bg-muted/30 px-3 py-2">
         <p className="text-xs text-muted-foreground">Server URL</p>
         <div className="flex items-center gap-2">
-          <code className="text-xs font-mono break-all flex-1" data-testid="mcp-url">
+          <code className="text-xs font-mono break-all min-w-0 flex-1" data-testid="mcp-url">
             {mcpUrl}
           </code>
           <Button type="button" variant="ghost" size="sm" onClick={() => copy(mcpUrl, 'url')} aria-label="Copy the server URL">
@@ -1054,7 +1058,7 @@ function AssistantConnections({ active }: { active: boolean }) {
             and make another — it cannot be shown twice.
           </p>
           <div className="mt-3 flex items-center gap-2">
-            <code className="text-xs font-mono break-all flex-1 rounded bg-background px-2 py-1">{secret}</code>
+            <code className="text-xs font-mono break-all min-w-0 flex-1 rounded bg-background px-2 py-1">{secret}</code>
             <Button type="button" variant="outline" size="sm" onClick={() => copy(secret, 'secret')}>
               {copied === 'secret' ? <Check className="h-4 w-4 mr-1" aria-hidden="true" /> : <Copy className="h-4 w-4 mr-1" aria-hidden="true" />}
               Copy
@@ -1141,12 +1145,14 @@ function AssistantConnections({ active }: { active: boolean }) {
 
 /**
  * What the viewer shares in ONE gathering (`event_members`): the directory listing, the messaging
- * handle and the email address (design §3.3). Three switches, saved one at a time, each the
- * viewer's own — an organizer can never set them, and none of them reaches a record.
+ * handle and email address stay app-side. The separate public host-listing switch opts into
+ * a record in the viewer's own repository. Each preference is saved independently by its holder.
  *
  * Renders nothing when the viewer is not a member of the gathering in view.
  */
 interface GatheringSharing {
+  public_role: boolean
+  role_claim?: { status: string; error?: string }
   directory_listing: boolean
   share_contact: boolean
   share_email: boolean
@@ -1154,7 +1160,7 @@ interface GatheringSharing {
   has_email: boolean
 }
 
-type SharingField = keyof Pick<GatheringSharing, 'directory_listing' | 'share_contact' | 'share_email'>
+type SharingField = keyof Pick<GatheringSharing, 'directory_listing' | 'share_contact' | 'share_email' | 'public_role'>
 
 function GatheringSharingSection({ slug, name }: { slug: string; name: string | null }) {
   const id = React.useId()
@@ -1193,11 +1199,21 @@ function GatheringSharingSection({ slug, name }: { slug: string; name: string | 
       })
       setSettings(res)
       const titles: Record<SharingField, [string, string]> = {
+        public_role: ['Public host listing preference saved', 'Your public host listing was removed'],
         directory_listing: ['You are listed in the directory', 'You are hidden from the directory'],
         share_contact: ['Members here can see your messaging handle', 'Your messaging handle is hidden here'],
         share_email: ['Members here can see your email address', 'Your email address is hidden here'],
       }
-      toast({ title: titles[field][res[field] ? 0 : 1], variant: 'success' })
+      const claims: Record<string, string> = {
+        published: 'You are now publicly listed as a host of this gathering.',
+        retracted: 'Your public host listing was removed.',
+        'role-too-low': 'Saved. You will be listed once you host a scheduled session.',
+        'policy-off': 'Saved. The organizers have not turned on public role listings.',
+        'not-linked': 'Saved. This gathering is not on the network yet.',
+      }
+      if (res.role_claim?.status === 'error') setError(res.role_claim.error || 'Saved, but the public listing could not be updated yet.')
+      else toast({ title: claims[res.role_claim?.status || ''] || titles[field][res[field] ? 0 : 1], variant: 'success' })
+      window.dispatchEvent(new CustomEvent('gathering-sharing-changed', { detail: slug }))
     } catch (err) {
       setSettings(previous)
       setError(err instanceof Error ? err.message : 'Could not save that setting.')
@@ -1227,7 +1243,7 @@ function GatheringSharingSection({ slug, name }: { slug: string; name: string | 
         What you share at {where}
       </h3>
       <p className="mt-0.5 text-xs text-muted-foreground">
-        Each gathering is separate. Nothing here is ever published on the network.
+        Each gathering is separate. Directory and contact details are visible only to members. Public host listing is a separate opt-in.
       </p>
       <div className="mt-2 divide-y divide-border">
         {row(
@@ -1240,7 +1256,7 @@ function GatheringSharingSection({ slug, name }: { slug: string; name: string | 
           'Show my messaging handle',
           settings.has_telegram
             ? <>Members of {where} can see the handle on your profile and message you there.</>
-            : <>Add a messaging handle above and members of {where} will be able to see it.</>,
+            : <>Add a messaging handle in Profile and members of {where} will be able to see it.</>,
           !settings.has_telegram,
         )}
         {row(
@@ -1251,13 +1267,15 @@ function GatheringSharingSection({ slug, name }: { slug: string; name: string | 
             : <>This account has no email address, so there is nothing to share.</>,
           !settings.has_email,
         )}
+        {row('public_role', 'Publicly list me as a host of this gathering',
+          <>Anyone on the open network can see that you hosted here, once you host a scheduled session and organizers allow public listings. Turning this off retracts your listing; copies on other services may remain.</>)}
       </div>
       {error && <p role="alert" className="mt-2 text-xs text-destructive">{error}</p>}
     </section>
   )
 }
 
-export function SettingsModal({ isOpen, onClose, gathering: gatheringProp }: SettingsModalProps) {
+export function SettingsModal({ isOpen, onClose, gathering: gatheringProp, initialTab }: SettingsModalProps) {
   const params = useParams<{ slug?: string }>()
   const eventSlug = typeof params?.slug === 'string' ? params.slug : null
   const gathering = gatheringProp ?? (eventSlug ? { slug: eventSlug, name: null } : null)
@@ -1275,10 +1293,10 @@ export function SettingsModal({ isOpen, onClose, gathering: gatheringProp }: Set
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) requestClose() }}>
-      <DialogContent size="lg" className="max-h-[calc(100dvh-2rem)]">
+      <DialogContent size="lg" className="max-h-[calc(100dvh-2rem)] min-w-0 grid-cols-[minmax(0,1fr)] overflow-x-hidden p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle>Account</DialogTitle>
-          <DialogDescription>Your profile, your identity on the network, and how you hear from gatherings.</DialogDescription>
+          <DialogDescription>Your profile, connected tools, and what you share.</DialogDescription>
         </DialogHeader>
         {confirmDiscard && (
           <ConfirmInline
@@ -1291,6 +1309,7 @@ export function SettingsModal({ isOpen, onClose, gathering: gatheringProp }: Set
         )}
         <AccountPanel
           active={isOpen}
+          initialTab={initialTab}
           gathering={gathering}
           onDirtyChange={setDirty}
           onCancel={onClose}
@@ -1625,138 +1644,6 @@ function SubjectRights({ active }: { active: boolean }) {
         )}
         <StatusLine message={message} />
       </WarningBox>
-    </section>
-  )
-}
-
-/* ──────────────────── Account → Notifications: calendar subscriptions ──────────────────── */
-
-interface CalendarFeed {
-  id: string
-  created_at: string
-  last_used_at: string | null
-}
-
-/**
- * A subscribable calendar URL for the sessions this person has saved (MT §12.8).
- *
- * The URL carries its own credential, because a calendar client holds no cookie — so it is
- * shown once, it is read-only, and it is revocable from here, which is why it lives next to
- * the other things that reach a person without them opening the app.
- */
-function CalendarSubscriptions({ active }: { active: boolean }) {
-  const id = React.useId()
-  const { toast } = useToast()
-  const [feeds, setFeeds] = React.useState<CalendarFeed[] | null>(null)
-  const [limit, setLimit] = React.useState(3)
-  const [fresh, setFresh] = React.useState<{ url: string; webcalUrl: string } | null>(null)
-  const [busy, setBusy] = React.useState(false)
-  const [message, setMessage] = React.useState<{ type: 'success' | 'error'; text: string } | null>(null)
-
-  const load = React.useCallback(async () => {
-    try {
-      const data = await apiFetch<{ feeds: CalendarFeed[]; limit: number }>('/api/me/calendar-feed')
-      setFeeds(data.feeds)
-      setLimit(data.limit)
-    } catch {
-      setFeeds([])
-    }
-  }, [])
-
-  React.useEffect(() => { if (active) void load() }, [active, load])
-
-  const create = async () => {
-    setBusy(true)
-    setMessage(null)
-    try {
-      const data = await apiFetch<{ url: string; webcalUrl: string }>('/api/me/calendar-feed', { method: 'POST', json: {} })
-      setFresh({ url: data.url, webcalUrl: data.webcalUrl })
-      await load()
-    } catch (e) {
-      setMessage({ type: 'error', text: e instanceof ApiError ? e.message : 'The subscription could not be created.' })
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  const revoke = async (feedId: string) => {
-    setBusy(true)
-    try {
-      await apiFetch(`/api/me/calendar-feed?id=${encodeURIComponent(feedId)}`, { method: 'DELETE' })
-      setFresh(null)
-      setMessage({ type: 'success', text: 'That subscription stops working now.' })
-      await load()
-    } catch (e) {
-      setMessage({ type: 'error', text: e instanceof ApiError ? e.message : 'It could not be revoked.' })
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  const copy = async (value: string) => {
-    try {
-      await navigator.clipboard.writeText(value)
-      toast({ title: 'Copied', description: 'Paste it into your calendar app.' })
-    } catch {
-      setMessage({ type: 'error', text: 'Copying failed. Select the link and copy it by hand.' })
-    }
-  }
-
-  return (
-    <section className="space-y-4 border-t pt-4" aria-labelledby={`${id}-heading`}>
-      <h3 id={`${id}-heading`} className="text-sm font-medium flex items-center gap-2">
-        <CalendarClock className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-        Subscribe to your schedule
-      </h3>
-      <p className="text-xs text-muted-foreground">
-        One calendar address for every session you saved, with a reminder 15 minutes before each. Treat it as a key:
-        anyone who has it can read your saved sessions.
-      </p>
-      <Details>
-        <p>
-          Your calendar re-checks the address on its own, so schedule changes arrive without you doing anything.
-          Revoke it here if it gets out.
-        </p>
-      </Details>
-
-      {fresh ? (
-        <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
-          <p className="text-xs font-medium">Copy this now — it is shown once.</p>
-          <code className="block break-all text-xs font-mono">{fresh.url}</code>
-          <div className="flex flex-wrap gap-2">
-            <Button type="button" size="sm" variant="outline" onClick={() => void copy(fresh.url)}>
-              <Copy className="h-4 w-4 mr-2" aria-hidden="true" />Copy the address
-            </Button>
-            <Button asChild size="sm" variant="outline"><a href={fresh.webcalUrl}>Open in my calendar app</a></Button>
-          </div>
-        </div>
-      ) : null}
-
-      {feeds === null ? (
-        <p className="text-xs text-muted-foreground">Loading…</p>
-      ) : feeds.length === 0 ? (
-        <p className="text-xs text-muted-foreground">No calendar is subscribed yet.</p>
-      ) : (
-        <ul className="space-y-2">
-          {feeds.map((feed) => (
-            <li key={feed.id} className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2">
-              <span className="min-w-0 text-xs text-muted-foreground">
-                Created {new Date(feed.created_at).toLocaleDateString()}
-                {feed.last_used_at ? ` · last fetched ${new Date(feed.last_used_at).toLocaleString()}` : ' · never fetched'}
-              </span>
-              <Button type="button" size="sm" variant="ghost" className="text-destructive" loading={busy} onClick={() => void revoke(feed.id)}>
-                Revoke
-              </Button>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <Button type="button" variant="outline" loading={busy} disabled={(feeds?.length ?? 0) >= limit} onClick={() => void create()}>
-        <CalendarClock className="h-4 w-4 mr-2" aria-hidden="true" />
-        Create a subscription address
-      </Button>
-      <StatusLine message={message} />
     </section>
   )
 }

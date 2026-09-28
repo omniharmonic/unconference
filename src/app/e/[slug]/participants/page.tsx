@@ -27,7 +27,6 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Checkbox } from '@/components/ui/checkbox'
 import { FilterChip } from '@/components/ui/filter-chip'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Select } from '@/components/ui/select'
@@ -118,7 +117,6 @@ function ParticipantsContent() {
 
   const [participants, setParticipants] = React.useState<Participant[]>([])
   const [shared, setShared] = React.useState<SharedInterests[]>([])
-  const [me, setMe] = React.useState<MySettings | null>(null)
   const [state, setState] = React.useState<LoadState>({ kind: 'loading' })
   const [search, setSearch] = React.useState('')
   const [selected, setSelected] = React.useState<Participant | null>(null)
@@ -158,7 +156,6 @@ function ParticipantsContent() {
       )
       setParticipants(res.participants)
       setShared(res.sharedInterests ?? [])
-      setMe(res.me)
       setState({ kind: 'ready' })
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) setState({ kind: 'signed_out' })
@@ -166,6 +163,13 @@ function ParticipantsContent() {
       else setState({ kind: 'error', message: err instanceof Error ? err.message : 'Could not load the directory' })
     }
   }, [event.slug])
+
+  React.useEffect(() => {
+    const gatheringSlug = event.slug
+    const changed = (notification: Event) => { if ((notification as CustomEvent).detail === gatheringSlug) void load() }
+    window.addEventListener('gathering-sharing-changed', changed)
+    return () => window.removeEventListener('gathering-sharing-changed', changed)
+  }, [event.slug, load])
 
   React.useEffect(() => {
     if (authLoading || roleLoading) return
@@ -280,14 +284,7 @@ function ParticipantsContent() {
           subtitle={`${plural(participants.length, 'person', 'people')} listed for ${event.name}. Visible only to members.`}
         />
 
-        {me && (
-          <DirectorySettings
-            slug={event.slug}
-            name={event.name}
-            settings={me}
-            onChange={(next) => { setMe(next); void load() }}
-          />
-        )}
+
 
         {sharedPeople.length > 0 && !filtering && (
           <section aria-labelledby="shared-heading">
@@ -411,117 +408,6 @@ function ParticipantsContent() {
   )
 }
 
-function DirectorySettings({
-  slug,
-  name,
-  settings,
-  onChange,
-}: {
-  slug: string
-  name: string
-  settings: MySettings
-  onChange: (next: MySettings) => void
-}) {
-  const id = React.useId()
-  const [busy, setBusy] = React.useState<'directory_listing' | 'public_role' | null>(null)
-  const [message, setMessage] = React.useState<{ type: 'success' | 'error'; text: string } | null>(null)
-
-  const update = async (field: 'directory_listing' | 'public_role', value: boolean) => {
-    setBusy(field)
-    setMessage(null)
-    try {
-      const res = await apiFetch<MySettings & { role_claim?: { status: string; error?: string } }>(
-        `/api/v1/events/${encodeURIComponent(slug)}/participants/me`,
-        { method: 'PATCH', json: { [field]: value } },
-      )
-      onChange(res)
-      const claim = res.role_claim
-      const claimMessages: Record<string, string> = {
-        published: 'You are now publicly listed as a host of this gathering.',
-        retracted: 'Your public host listing was removed.',
-        'role-too-low': 'Saved. You will be listed once you host a scheduled session.',
-        'policy-off': 'Saved. The organizers have not turned on public role listings.',
-        'not-linked': 'Saved. This gathering is not on the network yet; you will be listed when it is.',
-      }
-      if (claim?.status === 'error') setMessage({ type: 'error', text: claim.error || 'Saved, but the public listing could not be updated yet.' })
-      else setMessage({ type: 'success', text: (claim && claimMessages[claim.status]) || 'Saved.' })
-    } catch (err) {
-      setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Could not save that setting.' })
-    } finally {
-      setBusy(null)
-    }
-  }
-
-  return (
-    <Card className="border-border/60">
-      <CardContent className="p-4 space-y-3">
-        <div className="flex items-start gap-3 text-sm">
-          <Checkbox
-            id={`${id}-listing`}
-            className="mt-0.5"
-            checked={settings.directory_listing}
-            disabled={busy !== null}
-            onCheckedChange={(checked) => update('directory_listing', checked === true)}
-          />
-          <div>
-            <label htmlFor={`${id}-listing`} className="cursor-pointer">
-              <span className="font-medium">List me in this directory</span>
-              <span className="block text-xs text-muted-foreground mt-0.5">
-                Members of {name} can then see your name, photo, affiliation, interests and what you’re looking for.
-              </span>
-            </label>
-            <details className="mt-1 text-xs text-muted-foreground">
-              <summary className="cursor-pointer font-medium text-foreground/80 hover:text-foreground">Details</summary>
-              <div className="mt-1.5 space-y-1.5 leading-relaxed">
-                <p>
-                  Your messaging handle and your email address have their own switches under “What you share at {name}”
-                  in Account → Profile. Email is off unless you turn it on.
-                </p>
-                <p>
-                  <Link href={HELP_PRIVACY.members} className="underline">{LEARN_MORE}</Link>
-                </p>
-              </div>
-            </details>
-          </div>
-        </div>
-        <div className="flex items-start gap-3 text-sm">
-          <Checkbox
-            id={`${id}-public-role`}
-            className="mt-0.5"
-            checked={settings.public_role}
-            disabled={busy !== null}
-            onCheckedChange={(checked) => update('public_role', checked === true)}
-          />
-          <div>
-            <label htmlFor={`${id}-public-role`} className="cursor-pointer">
-              <span className="font-medium">Publicly list me as a host of this gathering</span>
-              <span className="block text-xs text-muted-foreground mt-0.5">
-                Anyone on the open network can then read that you hosted here. Nothing appears unless you host a
-                scheduled session.
-              </span>
-            </label>
-            <details className="mt-1 text-xs text-muted-foreground">
-              <summary className="cursor-pointer font-medium text-foreground/80 hover:text-foreground">Details</summary>
-              <div className="mt-1.5 space-y-1.5 leading-relaxed">
-                <p>
-                  The organizers also have to allow public role listings. Switching it off takes the listing down,
-                  though copies other services already took can remain.{' '}
-                  <Link href={HELP_PRIVACY.public} className="underline">{LEARN_MORE}</Link>
-                </p>
-              </div>
-            </details>
-          </div>
-        </div>
-        {busy && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" aria-label="Saving" />}
-        {message && (
-          <p className={cn('text-xs', message.type === 'success' ? 'text-success' : 'text-destructive')} role={message.type === 'success' ? 'status' : 'alert'}>
-            {message.text}
-          </p>
-        )}
-      </CardContent>
-    </Card>
-  )
-}
 
 function ParticipantCard({ participant, shared, onClick }: { participant: Participant; shared?: string[]; onClick: () => void }) {
   const event = useEvent()

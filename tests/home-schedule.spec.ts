@@ -410,7 +410,7 @@ test.describe('Home and Schedule against a real gathering', () => {
     try {
       await page.goto(`/e/${gathering.slug}/my-schedule`)
       await expect(page).toHaveURL(new RegExp(`/e/${gathering.slug}/schedule\\?view=mine$`))
-      await expect(page.getByRole('heading', { name: 'My schedule' })).toBeVisible()
+      await expect(page.getByRole('heading', { name: 'Schedule', exact: true })).toBeVisible()
       await expect(page.getByTestId('schedule-view')).toHaveAttribute('data-view', 'mine')
     } finally {
       await close()
@@ -431,7 +431,7 @@ test.describe('Home and Schedule against a real gathering', () => {
       await page.getByRole('radio', { name: 'My schedule' }).click()
       await expect(page).toHaveURL(/view=mine/)
       await expect(view).toHaveAttribute('data-view', 'mine')
-      await expect(page.getByRole('heading', { name: 'My schedule' })).toBeVisible()
+      await expect(page.getByRole('heading', { name: 'Schedule', exact: true })).toBeVisible()
       await expect(page.getByLabel('Search the schedule')).toHaveCount(0)
       // The saved tab is the favourites, so only the saved session is in it.
       await expect(view).toContainText(`Home later ${gathering.slug}`)

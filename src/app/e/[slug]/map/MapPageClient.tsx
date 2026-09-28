@@ -325,17 +325,10 @@ export function MapPageClient() {
   const header = (
     <PageHeader
       title="Map"
-      subtitle={loading ? undefined : `${plural(pins.filter((p) => p.kind !== 'me').length, 'place')} on the map`}
-      actions={
-        <Button variant="outline" size="sm" onClick={nearMe} loading={locating}>
-          <LocateFixed className="mr-1.5 h-4 w-4" aria-hidden />
-          Near me
-        </Button>
-      }
     />
   )
 
-  if (loading) {
+  if (loading || area.loading) {
     return (
       <DashboardLayout>
         {header}
@@ -359,9 +352,7 @@ export function MapPageClient() {
           )}
         </div>
       )}
-      {sessions.length === 0 && !loadError && (
-        <p className="text-sm text-muted-foreground">Nothing is on the schedule yet. Places appear here once sessions are scheduled.</p>
-      )}
+
 
       {mapFailed ? (
         <div className="space-y-3" data-testid="map-list-fallback">
@@ -371,6 +362,7 @@ export function MapPageClient() {
       ) : (
         <div className="relative flex flex-col gap-3 md:flex-row" style={{ minHeight: 'min(70vh, 640px)' }}>
           <div className="relative h-[55vh] min-h-[320px] flex-1 overflow-hidden rounded-lg border md:h-auto" data-testid="gathering-map">
+            <div className="absolute inset-0">
             <GatheringMap
               pins={pins}
               view={area.view}
@@ -383,6 +375,10 @@ export function MapPageClient() {
               onShapeClick={(id) => setSelectedPlace(id)}
               onError={() => setMapFailed(true)}
             />
+            </div>
+            <Button variant="outline" size="sm" onClick={nearMe} loading={locating} className="absolute left-3 top-3 z-10 gap-1.5 rounded-full bg-background/95 shadow-md backdrop-blur-md">
+              <LocateFixed className="h-4 w-4" aria-hidden />Near me
+            </Button>
             {unplaced.length > 0 && (
               <div className="pointer-events-none absolute bottom-2 left-2 rounded-md bg-background/90 px-2 py-1 text-xs text-muted-foreground shadow">
                 {plural(unplaced.length, 'place')} without a pin yet
@@ -414,7 +410,10 @@ export function MapPageClient() {
             <aside className="hidden md:block md:w-80 md:shrink-0">
               <div className="rounded-lg border p-4 text-sm text-muted-foreground">
                 Pick a pin to see its sessions for the day.
-                {unplaced.length > 0 && (
+                <Button variant="outline" size="sm" onClick={nearMe} loading={locating} className="absolute left-3 top-3 z-10 gap-1.5 rounded-full bg-background/95 shadow-md backdrop-blur-md">
+              <LocateFixed className="h-4 w-4" aria-hidden />Near me
+            </Button>
+            {unplaced.length > 0 && (
                   <div className="mt-3">
                     <p className="mb-1 font-medium text-foreground">Not on the map yet</p>
                     <ul className="list-disc space-y-0.5 pl-4">{unplaced.map((p) => <li key={p.id}>{p.name} · {plural(p.sessions.length, 'session')}</li>)}</ul>

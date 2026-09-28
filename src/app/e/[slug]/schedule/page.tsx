@@ -13,7 +13,7 @@ import * as React from 'react'
 import { Suspense } from 'react'
 import { Calendar, Heart, Loader2 } from 'lucide-react'
 import { SegmentedControl } from '@/components/ui/segmented-control'
-import { PageHeader } from '@/components/PageHeader'
+import { SubscribePersonalSchedule } from '@/components/SubscribePersonalSchedule'
 import { DashboardLayout } from '@/components/DashboardLayout'
 import { ExportScheduleButton } from '@/components/AddToCalendar'
 import { ScheduleView } from '@/components/schedule/ScheduleView'
@@ -43,21 +43,14 @@ function SchedulePageBody() {
   }
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        className="mb-0"
-        title={view === 'mine' ? 'My schedule' : 'Schedule'}
-        subtitle={view === 'mine' ? 'Sessions you saved to attend.' : 'Browse sessions by day.'}
-        actions={
-          <ExportScheduleButton
-            eventSlug={event.slug}
-            eventName={event.name}
-            favoritesOnly={view === 'mine'}
-            variant="outline"
-            size="sm"
-          />
-        }
-      />
+    <div className="space-y-4">
+      <div className="flex min-w-0 items-center justify-between gap-2" data-testid="schedule-heading">
+        <h1 className="min-w-0 font-display text-xl font-bold tracking-tight sm:text-3xl">Schedule</h1>
+        <div className="grid shrink-0 grid-cols-2 gap-1.5">
+          <ExportScheduleButton eventSlug={event.slug} eventName={event.name} favoritesOnly={view === 'mine'} compact size="sm" className="min-h-11 w-full gap-1.5 px-2 text-xs sm:px-3 sm:text-sm" />
+          <SubscribePersonalSchedule eventSlug={event.slug} className="min-h-11 w-full gap-1.5 px-2 text-xs sm:px-3 sm:text-sm" />
+        </div>
+      </div>
 
       <SegmentedControl<ScheduleViewMode>
         aria-label="Schedule view"

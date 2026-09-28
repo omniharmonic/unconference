@@ -162,8 +162,8 @@ test.describe('mobile: nothing moves sideways', () => {
         await page.goto(`/e/${slug}/dashboard`, { waitUntil: 'load' })
         const bar = page.getByTestId('mobile-tab-bar').first()
         await expect(bar).toBeVisible({ timeout: 60_000 })
-        await bar.locator('button').click()
-        await expect(page.getByTestId('more-sheet').first()).toBeVisible()
+        await bar.locator('button[aria-controls]').click()
+        await expect(page.getByTestId('more-navigation').first()).toBeVisible()
         // The sheet fades in; a rectangle read mid-slide is a rectangle nobody ever sees.
         await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => undefined))))
         assertNoSidewaysMovement('the More sheet, open', viewport.width, await overflow(page, viewport.width))

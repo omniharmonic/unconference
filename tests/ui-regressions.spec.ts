@@ -216,7 +216,7 @@ test.describe('production regressions: uploads, session navigation, map tiles', 
 
       await page.goto(`/e/${gathering.slug}/schedule?view=mine`)
       await expect(crashed(page)).toHaveCount(0)
-      await expect(page.getByRole('heading', { name: 'My schedule' })).toBeVisible()
+      await expect(page.getByRole('heading', { name: 'Schedule', exact: true })).toBeVisible()
     } finally {
       await close()
     }
@@ -399,6 +399,7 @@ test.describe('a host name leads to their profile', () => {
     try {
       // `?settings=1` opens the Account modal with this gathering in context.
       await page.goto(`/e/${gathering.slug}/participants?settings=1`)
+      await page.getByRole('tab', { name: 'Preferences', exact: true }).click()
       const sharing = page.getByTestId('gathering-sharing')
       await expect(sharing).toBeVisible()
       await expect(sharing.getByText(/What you share at/)).toBeVisible()

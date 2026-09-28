@@ -13,7 +13,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { useAuth } from '@/hooks/useAuth'
 
 /**
- * /account — the same Profile / Identity / Notifications tabs as the workspace "Account"
+ * /account — the same Profile / Identity / Connections / Preferences tabs as the workspace "Account"
  * dialog, as a page reachable from the site header's profile menu (release design §3).
  * `?tab=identity` opens a tab directly (the ATProto hints link here).
  */
@@ -22,7 +22,7 @@ function AccountContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const requested = searchParams.get('tab')
-  const initialTab = requested === 'identity' || requested === 'notifications' ? requested : 'profile'
+  const initialTab = requested === 'notifications' ? 'preferences' : requested === 'identity' || requested === 'connections' || requested === 'preferences' ? requested : 'profile'
   const [dirty, setDirty] = React.useState(false)
 
   // Warn before leaving the page with unsaved edits.

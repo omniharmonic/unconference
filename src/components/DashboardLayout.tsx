@@ -21,10 +21,9 @@ import { Button } from '@/components/ui/button'
 import { Toaster } from '@/components/ui/toast'
 import { CreditGauge } from '@/components/CreditGauge'
 import { MobileTabBar } from '@/components/MobileTabBar'
-import { MoreSheet } from '@/components/MoreSheet'
 import { NotificationBell } from '@/components/NotificationBell'
 import { OnboardingModal } from '@/components/auth/OnboardingModal'
-import { AccountModalProvider, useAccountModal, WorkspaceUserMenu } from '@/components/WorkspaceUserMenu'
+import { AccountModalProvider, WorkspaceUserMenu } from '@/components/WorkspaceUserMenu'
 import { useAuth } from '@/hooks/useAuth'
 import { cn } from '@/lib/utils'
 import { VotingProvider } from '@/hooks/useVoting'
@@ -73,7 +72,7 @@ export function getNavGroups(eventSlug: string, opts: { hasKnowledge?: boolean }
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const event = useEvent()
   // One ballot fetch per event for everything rendered in the workspace (gauge, cards, My votes),
-  // and one Account modal for every way into it (header avatar, More sheet, ?settings=1).
+  // and one Account modal for every way into it (header avatar, ?settings=1).
   return (
     <VotingProvider eventSlug={event.slug}>
       <AccountModalProvider gathering={{ slug: event.slug, name: event.name }}>
@@ -91,7 +90,6 @@ function DashboardShell({ children }: DashboardLayoutProps) {
   const event = useEvent()
   const proposalsOpen = isParticipationOpen(event, 'propose')
   const { isAdmin, voteCredits } = useEventRole()
-  const account = useAccountModal()
 
   const hasKnowledge = useEventHasKnowledge()
   const navGroups = React.useMemo(() => getNavGroups(event.slug, { hasKnowledge }), [event.slug, hasKnowledge])
@@ -103,7 +101,7 @@ function DashboardShell({ children }: DashboardLayoutProps) {
     if (needsOnboarding) setShowOnboarding(true)
   }, [needsOnboarding])
 
-  // The More sheet is about where you are, so arriving somewhere else closes it.
+  // The expanded navigation is about where you are, so arriving somewhere else closes it.
   React.useEffect(() => {
     setMoreOpen(false)
   }, [pathname])
@@ -159,7 +157,7 @@ function DashboardShell({ children }: DashboardLayoutProps) {
   )
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen bg-background flex" style={{ '--mobile-bar-h': moreOpen ? '118px' : '58px' } as React.CSSProperties}>
       <a href="#workspace-main" className="skip-link">Skip to content</a>
       {/* ─── Desktop Sidebar ─── */}
       <aside className={cn('hidden md:flex flex-col flex-shrink-0 border-r border-border bg-card fixed inset-y-0 left-0 z-20', SIDEBAR_WIDTH)}>
@@ -205,6 +203,7 @@ function DashboardShell({ children }: DashboardLayoutProps) {
             <span className="font-display font-bold text-sm truncate">{event.name}</span>
           </Link>
           <div className="flex items-center gap-0.5">
+            {isAdmin && <Button asChild variant="ghost" size="icon" title="Organizer workspace"><Link href={`/e/${event.slug}/admin`} aria-label="Organizer workspace"><Settings className="h-5 w-5" aria-hidden /></Link></Button>}
             {user && <NotificationBell />}
             {user ? (
               <WorkspaceUserMenu variant="avatar" />
@@ -228,18 +227,7 @@ function DashboardShell({ children }: DashboardLayoutProps) {
       </main>
 
       {/* ─── The floating bar, and everything one tap deeper ─── */}
-      <MobileTabBar eventSlug={event.slug} pathname={pathname} onMore={() => setMoreOpen(true)} moreOpen={moreOpen} />
-      <MoreSheet
-        open={moreOpen}
-        onOpenChange={setMoreOpen}
-        eventSlug={event.slug}
-        signedIn={!!user}
-        hasKnowledge={hasKnowledge}
-        proposalsOpen={proposalsOpen}
-        isOrganizer={isAdmin}
-        onOpenAccount={() => account?.open()}
-        onSignOut={() => void handleSignOut()}
-      />
+      <MobileTabBar eventSlug={event.slug} pathname={pathname} onMore={() => setMoreOpen((open) => !open)} onClose={() => setMoreOpen(false)} moreOpen={moreOpen} signedIn={!!user} hasKnowledge={hasKnowledge} onSignOut={() => void handleSignOut()} />
 
       {/* Modals */}
       {showOnboarding && user && (

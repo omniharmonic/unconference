@@ -971,6 +971,7 @@ test.describe('map', () => {
         page.on('request', (req) => {
           if (req.method() === 'PUT' && req.url().includes('/admin/custom-map')) saves += 1
         })
+        await slider.scrollIntoViewIfNeeded()
         const track = await slider.boundingBox()
         expect(track).not.toBeNull()
         const y = track!.y + track!.height / 2
@@ -991,6 +992,21 @@ test.describe('map', () => {
       await memberPage.goto(`${base}/e/${gathering.slug}/map`, { waitUntil: 'domcontentloaded', timeout: 60_000 })
       await memberPage.locator('[data-testid="gathering-map"] canvas.maplibregl-canvas').first().waitFor({ timeout: 30_000 }).catch(() => undefined)
       await expect(memberPage.locator('.sp-map-shape-label', { hasText: roomName })).toBeVisible({ timeout: 30_000 })
+      const mapSurface = memberPage.getByTestId('gathering-map')
+      const nearMe = mapSurface.getByRole('button', { name: 'Near me', exact: true })
+      await expect(nearMe).toBeVisible()
+      for (const width of [1280, 390]) {
+        await memberPage.setViewportSize({ width, height: 844 })
+        await expect(memberPage.locator('.sp-map-shape-label', { hasText: roomName })).toBeVisible()
+        await memberPage.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))))
+        const mapBox = (await mapSurface.boundingBox())!
+        await expect.poll(async () => (await mapSurface.locator('canvas').first().boundingBox())?.height ?? 0).toBeGreaterThan(300)
+        const controlBox = (await nearMe.boundingBox())!
+        expect(controlBox.y).toBeGreaterThanOrEqual(mapBox.y)
+        expect(controlBox.y + controlBox.height).toBeLessThanOrEqual(mapBox.y + mapBox.height)
+        expect(controlBox.x).toBeGreaterThanOrEqual(mapBox.x)
+        await memberPage.screenshot({ path: `/tmp/unconference-map-overlay-${width}.png` })
+      }
       await context.close()
     } catch (error) {
       // This test owns its WebGL browser, so Playwright cannot capture it automatically.

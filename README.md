@@ -14,7 +14,7 @@ The official application is built on **AT Protocol** and maintained on **`main`*
 2. **Invite people and ideas.** Participants sign in with email or an existing ATProto account, including Bluesky. They can propose sessions, find collaborators, and publicly endorse ideas.
 3. **Choose what matters.** Quadratic voting gives participants a credit budget. Allocating `n` votes costs `n²` credits, so people can express stronger preferences while working within a shared limit.
 4. **Build and publish the program.** Organizers place sessions into venue slots, review scheduling suggestions and conflicts, and publish the schedule.
-5. **Gather.** Participants follow the program, save sessions, export calendars, get updates, and contribute resources. Organizers manage attendance and ticket check-in.
+5. **Gather.** Participants follow the program, save sessions, export or subscribe to calendars, get updates, and contribute resources. Organizers manage attendance and ticket check-in.
 
 The organizer workspace shows the current phase, relevant deadlines, and the next transition. Dates and phases are related but distinct: automatic progression must be enabled for the gathering; otherwise organizers advance phases themselves. The workspace explains which mode is active.
 
@@ -97,6 +97,14 @@ RESEND_API_KEY= npm run dev
 Open **http://localhost:3001**. Seed data includes `demo-gathering`, `draft-gathering`, and `past-gathering`. With mail disabled locally, the sign-in endpoint returns a development link. `node scripts/dev-login.mjs you@example.test` can obtain a local session for API tests.
 
 The mock PLC is in-memory. Restarting it loses its DID directory, so a reset must also clear the local PDS/database volumes. Follow the [local stack guide](deploy/local/README.md); this reset destroys local test data.
+
+## Finding your tools
+
+On mobile, **More** expands the bottom navigation into a second row with People, My votes, Ask (when available), My gatherings, and Sign out. Organizers open their workspace from the control beside the notification bell. Tap your avatar to edit your account.
+
+Account keeps **Profile** and **Identity** separate from **Connections** (personal calendar subscriptions and AI assistants) and **Preferences** (notifications, directory visibility, contact sharing, and optional public host listing).
+
+On Schedule, **Export** downloads the selected view as a snapshot. **Subscribe** creates a private calendar feed of your saved sessions across gatherings, including future updates. Open it in a calendar app or copy its address into a calendar subscription; refresh timing depends on the calendar app. The address is shown once and can be revoked from Connections.
 
 ## Verification
 

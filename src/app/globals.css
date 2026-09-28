@@ -354,3 +354,18 @@
   border-left: 4px solid var(--session-color, hsl(var(--primary)));
   background-color: color-mix(in srgb, var(--session-color, hsl(var(--primary))) 9%, hsl(var(--card)));
 }
+
+/* A single refractive surface: expansion is spatial, never a modal interruption. */
+.mobile-glass {
+  border: 1px solid hsl(var(--foreground) / .12);
+  border-radius: 32px;
+  background: hsl(var(--background) / .88);
+  backdrop-filter: blur(24px) saturate(1.5);
+  -webkit-backdrop-filter: blur(24px) saturate(1.5);
+  box-shadow: inset 0 1px 0 hsl(var(--background) / .95), 0 8px 32px hsl(var(--foreground) / .14);
+  transition: border-radius 320ms cubic-bezier(.22, 1, .36, 1), box-shadow 320ms ease;
+}
+.mobile-glass[data-expanded="true"] { border-radius: 28px; box-shadow: inset 0 1px 0 hsl(var(--background) / .95), 0 12px 40px hsl(var(--foreground) / .18); }
+.mobile-bar-expansion { display: grid; grid-template-rows: 0fr; opacity: 0; visibility: hidden; transition: grid-template-rows 320ms cubic-bezier(.22, 1, .36, 1), opacity 200ms ease, visibility 0s 320ms; }
+.mobile-glass[data-expanded="true"] .mobile-bar-expansion { grid-template-rows: 1fr; opacity: 1; visibility: visible; transition-delay: 0s; }
+@media (prefers-reduced-motion: reduce) { .mobile-glass, .mobile-bar-expansion { transition: none; } }

@@ -9,7 +9,7 @@ import { createTestAccount, createTestGathering, type TestAccount, type TestGath
  *
  * What is actually asserted here is the shape of the shell at the two sizes the design is drawn
  * for: a floating bar with five items and no hamburger on a phone, no bar and a two-group sidebar
- * on a laptop, a More sheet that behaves like a dialog should, a header avatar that lands on the
+ * on a laptop, a expanded navigation that behaves like a dialog should, a header avatar that lands on the
  * Profile tab of Account, content without a redundant page banner, and
  * enough room under the content that the bar never covers the last thing on the page.
  *
@@ -31,7 +31,7 @@ const isLocal = (() => {
 const PHONE = { width: 390, height: 844 }
 const LAPTOP = { width: 1280, height: 800 }
 
-test.describe('mobile shell: floating bar, More sheet, content layout', () => {
+test.describe('mobile shell: floating bar, expanded navigation, content layout', () => {
   test.skip(!isLocal || !process.env.PDS_URL || !process.env.PDS_ADMIN_PASSWORD, 'needs the local stack: DATABASE_URL on localhost, PDS_URL, PDS_ADMIN_PASSWORD')
   test.describe.configure({ mode: 'serial' })
 
@@ -61,7 +61,7 @@ test.describe('mobile shell: floating bar, More sheet, content layout', () => {
   const bar = (page: Page) => page.getByTestId('mobile-tab-bar')
   /** The bar's only button. Located by CSS, not by role: an open sheet hides the rest of the
       document from the accessibility tree, which is exactly what it should do. */
-  const moreButton = (page: Page) => bar(page).locator('button')
+  const moreButton = (page: Page) => bar(page).locator('button[aria-controls]')
 
   test.beforeAll(async () => {
     test.setTimeout(180_000)
@@ -98,7 +98,7 @@ test.describe('mobile shell: floating bar, More sheet, content layout', () => {
       await openWorkspace(page, `/e/${gathering.slug}/sessions`)
 
       await expect(bar(page)).toBeVisible()
-      const items = bar(page).locator('a, button')
+      const items = bar(page).locator('a, button').filter({ visible: true })
       await expect(items).toHaveCount(5)
       expect((await items.allInnerTexts()).map((t) => t.trim())).toEqual(['Home', 'Sessions', 'Schedule', 'Map', 'More'])
 
@@ -106,7 +106,7 @@ test.describe('mobile shell: floating bar, More sheet, content layout', () => {
       await expect(bar(page).getByRole('link', { name: 'Sessions' })).toHaveAttribute('aria-current', 'page')
       await expect(bar(page).getByRole('link', { name: 'Home' })).not.toHaveAttribute('aria-current', 'page')
 
-      // The drawer and its hamburger are gone: the avatar and the More sheet replaced them.
+      // The drawer and its hamburger are gone: the avatar and the expanded navigation replaced them.
       await expect(page.getByRole('button', { name: /event navigation/i })).toHaveCount(0)
 
       // Every target in the bar is at least 44px tall.
@@ -172,9 +172,9 @@ test.describe('mobile shell: floating bar, More sheet, content layout', () => {
     }
   })
 
-  // ── the More sheet ────────────────────────────────────────────────────────────────────────
+  // ── the expanded navigation ────────────────────────────────────────────────────────────────────────
 
-  test('the More sheet holds what the bar does not, traps focus, and closes on Escape', async ({ browser }) => {
+  test('the expanded navigation holds what the bar does not, keeps the page available, and closes on Escape', async ({ browser }) => {
     const { page, errors, close } = await shell(browser, PHONE)
     try {
       await openWorkspace(page, `/e/${gathering.slug}/sessions`)
@@ -182,34 +182,33 @@ test.describe('mobile shell: floating bar, More sheet, content layout', () => {
       await expect(more).toHaveAttribute('aria-expanded', 'false')
       await more.click()
 
-      const sheet = page.getByTestId('more-sheet')
+      const sheet = page.getByTestId('more-navigation')
       await expect(sheet).toBeVisible()
-      await expect(sheet.getByRole('heading', { name: 'More' })).toBeVisible()
       await expect(more).toHaveAttribute('aria-expanded', 'true')
 
       // Proposals are open, the viewer is an owner and can read this gathering's transcripts,
       // so the full set is here.
-      const rows = sheet.locator('nav a, nav button')
+      const rows = sheet.locator('a, button')
       expect((await rows.allInnerTexts()).map((t) => t.trim())).toEqual([
         'People',
         'My votes',
         'Ask',
-        'Propose a session',
-        'Organizer workspace',
-        'Notification preferences',
         'My gatherings',
-        'Account',
         'Sign out',
       ])
 
-      // Focus is trapped: tabbing never leaves the sheet.
-      for (let i = 0; i < 12; i++) {
-        await page.keyboard.press('Tab')
-        expect(await sheet.evaluate((el) => el.contains(document.activeElement))).toBe(true)
-      }
+      // It is a disclosure, so the page and main tabs remain usable.
+      await expect(page.getByRole('dialog')).toHaveCount(0)
+      await expect(page.getByRole('link', { name: 'Organizer workspace', exact: true })).toBeVisible()
+      await page.evaluate(() => Promise.all(document.getAnimations().map((animation) => animation.finished.catch(() => undefined))))
+      const firstRow = await bar(page).getByRole('link', { name: 'Sessions', exact: true }).boundingBox()
+      const secondRow = await sheet.getByRole('link', { name: 'People', exact: true }).boundingBox()
+      expect(secondRow!.y + secondRow!.height).toBeLessThanOrEqual(firstRow!.y)
+      for (const row of await rows.all()) expect((await row.boundingBox())!.height).toBeGreaterThanOrEqual(44)
+      await page.screenshot({ path: '/tmp/unconference-expanded-pill-390.png' })
 
       await page.keyboard.press('Escape')
-      await expect(sheet).toBeHidden()
+      await expect(sheet).toHaveAttribute('aria-hidden', 'true')
       await expect(more).toHaveAttribute('aria-expanded', 'false')
       expect(errors).toEqual([])
     } finally {
@@ -217,38 +216,38 @@ test.describe('mobile shell: floating bar, More sheet, content layout', () => {
     }
   })
 
-  test('the More sheet closes on a route change', async ({ browser }) => {
+  test('the expanded navigation closes on a route change', async ({ browser }) => {
     const { page, close } = await shell(browser, PHONE)
     try {
       await openWorkspace(page, `/e/${gathering.slug}/sessions`)
       await moreButton(page).click()
-      const sheet = page.getByTestId('more-sheet')
+      const sheet = page.getByTestId('more-navigation')
       await expect(sheet).toBeVisible()
 
       await sheet.getByRole('link', { name: 'My votes' }).click()
       await expect(page).toHaveURL(new RegExp(`/e/${gathering.slug}/my-votes`), { timeout: 60_000 })
-      await expect(sheet).toBeHidden()
+      await expect(sheet).toHaveAttribute('aria-hidden', 'true')
 
       // And on a route change the sheet itself did not start: going back closes it too.
       await moreButton(page).click()
-      await expect(page.getByTestId('more-sheet')).toBeVisible()
+      await expect(page.getByTestId('more-navigation')).toBeVisible()
       await page.goBack()
       await expect(page).toHaveURL(new RegExp(`/e/${gathering.slug}/sessions`))
-      await expect(page.getByTestId('more-sheet')).toBeHidden()
+      await expect(page.getByTestId('more-navigation')).toHaveAttribute('aria-hidden', 'true')
     } finally {
       await close()
     }
   })
 
-  test('a backdrop click closes the More sheet', async ({ browser }) => {
+  test('a backdrop click closes the expanded navigation', async ({ browser }) => {
     const { page, close } = await shell(browser, PHONE)
     try {
       await openWorkspace(page, `/e/${gathering.slug}/sessions`)
       await moreButton(page).click()
-      const sheet = page.getByTestId('more-sheet')
+      const sheet = page.getByTestId('more-navigation')
       await expect(sheet).toBeVisible()
       await page.mouse.click(PHONE.width / 2, 40)
-      await expect(sheet).toBeHidden()
+      await expect(sheet).toHaveAttribute('aria-hidden', 'true')
     } finally {
       await close()
     }
@@ -312,6 +311,7 @@ test.describe('mobile shell: floating bar, More sheet, content layout', () => {
 
       const note = page.getByRole('region', { name: 'Notifications' }).getByRole('status')
       await expect(note).toContainText('Saved to my schedule')
+      await page.evaluate(() => Promise.all(document.getAnimations().map((animation) => animation.finished.catch(() => undefined))))
       // Above the bar, not over it.
       const toastBox = (await note.boundingBox())!
       const barBox = (await bar(page).boundingBox())!
@@ -369,6 +369,67 @@ test.describe('mobile shell: floating bar, More sheet, content layout', () => {
     }
   })
 
+  test('account sections fit narrow screens and keep sharing and connections in their own tabs', async ({ browser }) => {
+    for (const width of [320, 390, 1280]) {
+      const { page, close } = await shell(browser, { width, height: 844 })
+      try {
+        await openWorkspace(page, `/e/${gathering.slug}/participants?settings=1`)
+        const dialog = page.getByRole('dialog', { name: 'Account', exact: true })
+        await expect(dialog).toBeVisible()
+        for (const tab of ['Profile', 'Identity', 'Connections', 'Preferences']) {
+          await dialog.getByRole('tab', { name: tab, exact: true }).click()
+          const panel = dialog.getByRole('tabpanel')
+          await expect(panel).toBeVisible()
+          if (tab === 'Connections') {
+            await expect(panel.getByRole('heading', { name: 'Connect an AI assistant' })).toBeVisible()
+            await expect(panel.getByRole('heading', { name: 'Subscribe to your schedule' })).toBeVisible()
+          }
+          if (tab === 'Preferences') {
+            await expect(panel.getByRole('switch', { name: 'Publicly list me as a host of this gathering', exact: false })).toBeVisible()
+          }
+          expect(await dialog.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true)
+          const box = (await dialog.boundingBox())!
+          expect(box.x).toBeGreaterThanOrEqual(0)
+          expect(box.x + box.width).toBeLessThanOrEqual(width)
+          await page.screenshot({ path: `/tmp/unconference-account-${tab}-${width}.png` })
+        }
+        await dialog.getByRole('button', { name: 'Close', exact: true }).first().click()
+        await expect(page.locator('#workspace-main').getByRole('checkbox')).toHaveCount(0)
+      } finally { await close() }
+    }
+  })
+
+  test('compact schedule actions create a usable, revocable personal subscription', async ({ browser }) => {
+    const { page, close } = await shell(browser, { width: 320, height: 844 })
+    try {
+      await openWorkspace(page, `/e/${gathering.slug}/schedule?view=mine`)
+      const heading = page.getByTestId('schedule-heading')
+      const exportBox = (await heading.getByRole('button', { name: 'Export', exact: true }).boundingBox())!
+      const subscribe = heading.getByRole('button', { name: 'Subscribe', exact: true })
+      const subscribeBox = (await subscribe.boundingBox())!
+      expect(exportBox.y).toBe(subscribeBox.y)
+      expect(exportBox.width).toBe(subscribeBox.width)
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+      await page.screenshot({ path: '/tmp/unconference-schedule-320.png' })
+      await subscribe.click()
+      const dialog = page.getByRole('dialog')
+      const created = page.waitForResponse((r) => r.url().endsWith('/api/me/calendar-feed') && r.request().method() === 'POST')
+      await dialog.getByRole('button', { name: 'Create subscription', exact: true }).click()
+      const response = await created
+      expect(response.status()).toBe(201)
+      const data = await response.json()
+      await expect(dialog.getByRole('link', { name: 'Open in my calendar app' })).toHaveAttribute('href', data.webcalUrl)
+      const path = new URL(data.url).pathname
+      const feed = await page.request.get(base + path)
+      expect(feed.status()).toBe(200)
+      expect(await feed.text()).toContain('BEGIN:VCALENDAR')
+      const revoked = page.waitForResponse((r) => r.url().includes('/api/me/calendar-feed?id=') && r.request().method() === 'DELETE')
+      await dialog.getByRole('button', { name: 'Revoke', exact: true }).click()
+      expect((await revoked).ok()).toBe(true)
+      expect((await page.request.get(base + path)).status()).toBe(404)
+    } finally { await close() }
+  })
+
   // ── accessibility ─────────────────────────────────────────────────────────────────────────
 
   test('the shell has no serious or critical accessibility violations', async ({ browser }) => {
@@ -383,11 +444,11 @@ test.describe('mobile shell: floating bar, More sheet, content layout', () => {
           await page.waitForLoadState('networkidle').catch(() => undefined)
           failures.push(...(await violations(page, `${label} ${path}`)))
         }
-        // And with the More sheet open, which is the one surface the shell adds.
+        // And with the expanded navigation open, which is the one surface the shell adds.
         if (label === 'phone') {
           await moreButton(page).click()
-          await expect(page.getByTestId('more-sheet')).toBeVisible()
-          failures.push(...(await violations(page, 'phone, More sheet open')))
+          await expect(page.getByTestId('more-navigation')).toBeVisible()
+          failures.push(...(await violations(page, 'phone, expanded navigation open')))
         }
       } finally {
         await close()

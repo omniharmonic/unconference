@@ -238,14 +238,12 @@ test.describe('PWA: the offer to install, and the one dismissal that sticks', ()
     await raw?.end({ timeout: 5 })
   })
 
-  /** Opens the More sheet, once the shell it lives in has actually drawn itself. */
-  async function openMoreSheet(page: Page) {
-    const bar = page.getByTestId('mobile-tab-bar').first()
-    await expect(bar).toBeVisible({ timeout: 60_000 })
-    // The bar is present in SSR before its click handlers are hydrated.
-    await expect(page.locator('button[aria-label^="Account,"]').filter({ visible: true }).first()).toBeVisible({ timeout: 60_000 })
-    await bar.locator('button').click()
-    await expect(page.getByTestId('more-sheet').first()).toBeVisible()
+  /** Opens Account, once the shell it lives in has actually drawn itself. */
+  async function openAccount(page: Page) {
+    const avatar = page.locator('button[aria-label^="Account,"]').filter({ visible: true }).first()
+    await expect(avatar).toBeVisible({ timeout: 60_000 })
+    await avatar.click()
+    await expect(page.getByRole('dialog', { name: 'Account', exact: true })).toBeVisible()
   }
 
   /**
@@ -277,14 +275,14 @@ test.describe('PWA: the offer to install, and the one dismissal that sticks', ()
     })
   }
 
-  // ── the More sheet ──────────────────────────────────────────────────────────────────────
+  // ── Account ──────────────────────────────────────────────────────────────────────
 
-  test('the More sheet offers the app, and says where the iOS button is rather than pretending to install', async ({ browser }) => {
+  test('Account offers the app, and says where the iOS button is rather than pretending to install', async ({ browser }) => {
     const { page, close } = await iphone(browser, member)
     try {
       await page.goto(`/e/${gathering.slug}/sessions`, { waitUntil: 'domcontentloaded' })
-      await openMoreSheet(page)
-      const sheet = page.getByTestId('more-sheet').first()
+      await openAccount(page)
+      const sheet = page.getByRole('dialog', { name: 'Account', exact: true })
 
       const row = sheet.getByTestId('install-row')
       await expect(row).toBeVisible()
@@ -311,9 +309,9 @@ test.describe('PWA: the offer to install, and the one dismissal that sticks', ()
       // The override is in place before anything of ours ran.
       expect(await page.evaluate(() => window.matchMedia('(display-mode: standalone)').matches)).toBe(true)
 
-      await openMoreSheet(page)
-      const sheet = page.getByTestId('more-sheet').first()
-      await expect(sheet.getByRole('heading', { name: 'More' })).toBeVisible()
+      await openAccount(page)
+      const sheet = page.getByRole('dialog', { name: 'Account', exact: true })
+      await expect(sheet.getByRole('heading', { name: 'Account', exact: true })).toBeVisible()
       await expect(sheet.getByTestId('install-row')).toHaveCount(0)
     } finally {
       await close()
@@ -382,10 +380,10 @@ test.describe('PWA: the offer to install, and the one dismissal that sticks', ()
       // A fresh "no" silences every surface.
       await page.evaluate(() => window.localStorage.setItem('pwa-install-dismissed', String(Date.now())))
       await page.reload({ waitUntil: 'load' })
-      await openMoreSheet(page)
+      await openAccount(page)
       await expect(page.getByTestId('install-row')).toHaveCount(0)
       await page.keyboard.press('Escape')
-      await expect(page.getByTestId('more-sheet')).toHaveCount(0)
+      await expect(page.getByRole('dialog', { name: 'Account', exact: true })).toHaveCount(0)
 
       // Thirty-one days later it may ask once more.
       await page.evaluate(() => {
@@ -393,7 +391,7 @@ test.describe('PWA: the offer to install, and the one dismissal that sticks', ()
         window.localStorage.setItem('pwa-install-dismissed', String(Date.now() - thirtyOneDays))
       })
       await page.reload({ waitUntil: 'load' })
-      await openMoreSheet(page)
+      await openAccount(page)
       await expect(page.getByTestId('install-row')).toBeVisible()
     } finally {
       await close()

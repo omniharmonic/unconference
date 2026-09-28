@@ -254,6 +254,9 @@ export default function MapCanvas({
       return
     }
     mapRef.current = map
+    // Side panels and responsive flex layouts can resize the container without a window resize.
+    const resizeObserver = new ResizeObserver(() => map.resize())
+    resizeObserver.observe(container)
     if (interactive) map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right')
     // Markers are DOM, not style: they go on as soon as the map exists, so pins show even while a
     // slow style is still loading (and the page still gets a usable map if only the tiles are late).
@@ -297,6 +300,7 @@ export default function MapCanvas({
       markersRef.current.clear()
       for (const m of labelsRef.current.values()) m.remove()
       labelsRef.current.clear()
+      resizeObserver.disconnect()
       map.remove()
       mapRef.current = null
       setReady(false)

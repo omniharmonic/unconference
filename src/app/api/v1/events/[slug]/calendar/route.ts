@@ -27,7 +27,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
   const favoritesOnly = search.get('favorites') === 'true'
   const subscribe = search.get('subscribe') === 'true'
   if (subscribe && favoritesOnly) {
-    return jsonError(400, 'A subscription URL carries the public schedule. Subscribe to your own saved sessions from Account → Notifications.')
+    return jsonError(400, 'A subscription URL carries the public schedule. Subscribe to your own saved sessions from Account → Connections.')
   }
 
   let sessionIds: string[] | undefined
