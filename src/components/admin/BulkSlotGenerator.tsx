@@ -222,7 +222,7 @@ export function BulkSlotGenerator({
               <Badge variant={d.date === activeDay ? 'secondary' : 'muted'} className="ml-2 text-xs">{perDay.get(d.date) ?? 0}</Badge>
             </Button>
           ))}
-          <div className="ml-auto flex items-center gap-3">
+          <div className="w-full flex flex-wrap items-center gap-3 sm:ml-auto sm:w-auto">
             <div className="flex items-center gap-2">
               <Switch size="sm" checked={sameEveryDay} onCheckedChange={setSameDays} aria-labelledby={`${id}-same-days`} />
               <Label id={`${id}-same-days`} className="font-normal">Same times every day</Label>
@@ -252,7 +252,7 @@ export function BulkSlotGenerator({
               <Select
                 aria-label="Saved template"
                 value={templateChoice}
-                wrapperClassName="w-auto min-w-40"
+                wrapperClassName="w-full min-w-0 sm:w-auto sm:min-w-40"
                 data-testid="slot-template-select"
                 onChange={(e) => setTemplateChoice(e.target.value)}
               >
@@ -269,7 +269,7 @@ export function BulkSlotGenerator({
           ) : (
             <p className="text-sm text-muted-foreground">No saved templates yet. Save this shape to reuse it next time — a clone of this gathering carries it too.</p>
           )}
-          <div className="ml-auto flex items-center gap-2">
+          <div className="w-full flex flex-wrap items-center gap-2 sm:ml-auto sm:w-auto">
             {namingTemplate ? (
               <>
                 <Input
@@ -278,7 +278,7 @@ export function BulkSlotGenerator({
                   value={templateName}
                   maxLength={MAX_TEMPLATE_NAME}
                   placeholder="e.g. Weekday shape"
-                  className="h-9 w-48"
+                  className="h-10 w-full sm:w-48"
                   onChange={(e) => { setTemplateName(e.target.value); setConfirmReplace(false) }}
                 />
                 {replacing && !confirmReplace && (

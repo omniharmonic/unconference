@@ -179,7 +179,9 @@ export default function AdminSchedulePage() {
   const [busy, setBusy] = React.useState(false)
   const [notice, setNotice] = React.useState<Notice | null>(null)
 
-  const [showSidebar, setShowSidebar] = React.useState(true)
+  const [showSidebar, setShowSidebar] = React.useState(false)
+  // Start with the calendar on phones; desktop has room for both panels.
+  React.useEffect(() => { setShowSidebar(window.matchMedia('(min-width: 1024px)').matches) }, [])
   const [dragged, setDragged] = React.useState<AdminSession | null>(null)
   const [picked, setPicked] = React.useState<AdminSession | null>(null)
   const [conflict, setConflict] = React.useState<{ session: AdminSession; slotId: string; occupant: string } | null>(null)
@@ -718,7 +720,7 @@ export default function AdminSchedulePage() {
       <AudienceClusters base={base} votingStatus={votingStatus} refreshKey={sessions.length} className="mb-4" />
 
       <div className="relative flex min-h-[600px] h-[calc(100dvh-220px)] calendar-workspace overflow-hidden bg-card">
-        <div className={cn('border-r bg-muted/30 flex flex-col transition-all duration-200', showSidebar ? 'absolute inset-y-0 left-0 z-10 w-72 bg-card shadow-xl lg:static lg:w-72 lg:shadow-none shrink-0' : 'w-0 overflow-hidden')}>
+        <div className={cn('border-r bg-muted/30 flex flex-col transition-all duration-200', showSidebar ? 'absolute inset-y-0 left-0 z-10 w-72 max-w-full bg-card shadow-xl lg:static lg:w-72 lg:shadow-none shrink-0' : 'hidden')}>
           <div className="p-3 sm:p-4 border-b bg-background flex items-center justify-between gap-2">
             <div className="min-w-0">
               <h2 className="font-semibold text-sm">Unscheduled ({unscheduled.length})</h2>
@@ -763,7 +765,10 @@ export default function AdminSchedulePage() {
                           ))}
                         </div>
                         <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-                          <Button size="sm" variant="ghost" className="text-xs -ml-2" onClick={() => setPicked(picked?.id === session.id ? null : session)} aria-pressed={picked?.id === session.id}>
+                          <Button size="sm" variant="ghost" className="text-xs -ml-2" onClick={() => {
+                            setPicked(picked?.id === session.id ? null : session)
+                            if (!window.matchMedia('(min-width: 1024px)').matches) setShowSidebar(false)
+                          }} aria-pressed={picked?.id === session.id}>
                             {picked?.id === session.id ? 'Cancel placing' : 'Place…'}
                           </Button>
                           <PinMenu session={session} venues={venues} busy={pinning === session.id} onPin={(venueId) => void pinSession(session, venueId)} />
@@ -778,24 +783,26 @@ export default function AdminSchedulePage() {
         </div>
 
         <div className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex items-center gap-2 p-3 sm:p-4 border-b bg-background overflow-x-auto">
+          <div className="flex flex-wrap items-center gap-2 p-3 sm:p-4 border-b bg-background">
             {!showSidebar && (
               <Button variant="outline" size="sm" onClick={() => setShowSidebar(true)} className="flex-shrink-0">
                 <PanelLeft className="h-4 w-4 mr-1" />
-                <span className="hidden sm:inline">Sessions</span>
+                <span>Sessions</span>
                 <Badge variant="secondary" className="ml-1 text-xs">{unscheduled.length}</Badge>
               </Button>
             )}
+            <div className="flex min-w-0 flex-1 gap-2 overflow-x-auto" role="group" aria-label="Schedule day">
             {eventDays.map((day) => (
-              <Button key={day} variant={selectedDay === day ? 'default' : 'outline'} size="sm" onClick={() => setSelectedDay(day)} aria-pressed={selectedDay === day} className="calendar-day whitespace-nowrap flex-shrink-0">
+              <Button key={day} variant={selectedDay === day ? 'default' : 'outline'} size="sm" onClick={() => setSelectedDay(day)} aria-pressed={selectedDay === day} className="whitespace-nowrap flex-shrink-0">
                 {getEventDayLabel(day, event.timezone)}
               </Button>
             ))}
-            <div className="ml-auto flex items-center gap-1">
+            </div>
+            <div role="group" aria-label="Schedule actions" className="flex w-full flex-wrap items-center gap-1 border-t pt-2">
               {unscheduled.length > 0 && (
                 <Button variant="outline" size="sm" onClick={previewAutoSchedule} disabled={autoLoading || busy} className="gap-1.5" title={votingStatus === 'open' ? 'Available after voting closes' : undefined}>
                   {votingStatus === 'open' ? <Lock className="h-4 w-4" /> : <SlidersHorizontal className="h-4 w-4" />}
-                  <span className="hidden sm:inline">{votingStatus === 'closed' ? 'Auto-schedule' : 'Run without ballots'}</span>
+                  <span>{votingStatus === 'closed' ? 'Auto-schedule' : 'Run without ballots'}</span>
                 </Button>
               )}
               {!draftQuality.unavailable && draftAssignments.length > 0 && (
@@ -823,9 +830,9 @@ export default function AdminSchedulePage() {
               {publishStatus?.hasUnpublishedChanges && (
                 <Badge variant="amber" className="gap-1"><FileText className="h-3 w-3" aria-hidden="true" />{changeCount} unpublished</Badge>
               )}
-              <Button variant={publishStatus?.hasUnpublishedChanges ? 'default' : 'outline'} size="sm" onClick={() => { setPublishResult(null); setPublishOpen(true) }} className="gap-1.5">
+              <Button variant={publishStatus?.hasUnpublishedChanges ? 'default' : 'outline'} size="sm" onClick={() => { setPublishResult(null); setPublishOpen(true) }} className="ml-auto gap-1.5">
                 <Send className="h-4 w-4" />
-                <span className="hidden sm:inline">{publishStatus?.schedulePublishedAt ? 'Publish changes' : 'Publish'}</span>
+                <span>{publishStatus?.schedulePublishedAt ? 'Publish changes' : 'Publish'}</span>
               </Button>
             </div>
           </div>
@@ -1065,7 +1072,7 @@ export default function AdminSchedulePage() {
                   </p>
                   {autoResult.assignments.length > 0 && (
                     <div>
-                      <div className="flex items-center justify-between mb-2">
+                      <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                         <h3 className="font-medium">Proposed ({selectedAssignments.size} of {autoResult.assignments.length} selected)</h3>
                         <div className="flex gap-2">
                           <Button variant="ghost" size="sm" onClick={() => setSelectedAssignments(new Set(autoResult.assignments.map((a) => a.sessionId)))}>Select all</Button>

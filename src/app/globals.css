@@ -158,7 +158,7 @@
   .section-rule { @apply flex items-center gap-4 text-sm font-semibold text-foreground; }
   .section-rule::after { content: ''; @apply flex-1 h-px bg-border; }
   .protocol-box { @apply border rounded-xl p-4 text-sm leading-relaxed; }
-  .workspace-content { @apply mx-auto w-full max-w-[1440px] p-5 md:p-8 lg:p-10; }
+  .workspace-content { @apply mx-auto w-full max-w-[1440px] p-4 sm:p-6 md:p-8 lg:p-10; }
   .page-title { @apply text-2xl md:text-3xl font-display font-semibold tracking-tight; }
   .stat-value { @apply text-4xl font-semibold tracking-tight; }
   .workspace-content > div > div > p:first-of-type { @apply leading-relaxed; }

@@ -74,20 +74,19 @@ export function BatchActions({
   return (
     <>
       {/* Floating toolbar; bottom offset respects the phone safe area. */}
-      <div className="fixed bottom-[calc(env(safe-area-inset-bottom)+1.5rem)] left-1/2 z-50 -translate-x-1/2 animate-in slide-in-from-bottom-4 duration-200 max-w-[calc(100vw-2rem)]">
-        <div role="toolbar" aria-label="Selected sessions" className="flex items-center gap-2 overflow-x-auto rounded-full border bg-card px-3 py-2 shadow-lg">
+      <div className="fixed bottom-[calc(env(safe-area-inset-bottom)+1.5rem)] left-1/2 md:left-[calc(50%+120px)] lg:left-[calc(50%+130px)] z-50 -translate-x-1/2 w-[calc(100vw-2rem)] sm:w-max md:max-w-[calc(100vw-272px)] lg:max-w-[calc(100vw-292px)]">
+        <div role="toolbar" aria-label="Selected sessions" className="animate-in slide-in-from-bottom-4 duration-200 motion-reduce:animate-none flex flex-wrap items-center gap-2 rounded-2xl border bg-card p-3 shadow-lg sm:rounded-full">
           <Badge variant="secondary" className="whitespace-nowrap text-sm font-medium">
             {selectedCount} selected
           </Badge>
 
-          <div className="h-6 w-px shrink-0 bg-border" aria-hidden="true" />
+          <div className="hidden sm:block h-6 w-px shrink-0 bg-border" aria-hidden="true" />
 
-          <div className="flex items-center gap-1">
+          <div className="order-last grid w-full grid-cols-2 gap-2 sm:order-none sm:flex sm:w-auto sm:flex-wrap sm:items-center sm:gap-1">
             {allowedActions.includes('approve') && onApprove && (
               <Button size="sm" onClick={onApprove} disabled={isLoading} className="gap-1.5">
                 <Check className="h-4 w-4" aria-hidden="true" />
-                <span className="hidden sm:inline">Approve</span>
-                <span className="sr-only sm:hidden">Approve</span>
+                <span className="inline">Approve</span>
               </Button>
             )}
 
@@ -100,8 +99,7 @@ export function BatchActions({
                 className="gap-1.5 text-destructive hover:text-destructive"
               >
                 <X className="h-4 w-4" aria-hidden="true" />
-                <span className="hidden sm:inline">Reject</span>
-                <span className="sr-only sm:hidden">Reject</span>
+                <span className="inline">Reject</span>
               </Button>
             )}
 
@@ -110,8 +108,7 @@ export function BatchActions({
                 <DropdownMenuTrigger asChild>
                   <Button size="sm" variant="ghost" disabled={isLoading} className="gap-1.5">
                     <Tag className="h-4 w-4" aria-hidden="true" />
-                    <span className="hidden sm:inline">Track</span>
-                    <span className="sr-only sm:hidden">Assign a track</span>
+                    <span className="inline">Track</span>
                     <ChevronDown className="h-3 w-3" aria-hidden="true" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -139,15 +136,14 @@ export function BatchActions({
                 className="gap-1.5 text-destructive hover:text-destructive"
               >
                 <Trash2 className="h-4 w-4" aria-hidden="true" />
-                <span className="hidden sm:inline">Delete</span>
-                <span className="sr-only sm:hidden">Delete</span>
+                <span className="inline">Delete</span>
               </Button>
             )}
           </div>
 
-          <div className="h-6 w-px shrink-0 bg-border" aria-hidden="true" />
+          <div className="hidden sm:block h-6 w-px shrink-0 bg-border" aria-hidden="true" />
 
-          <Button size="icon-sm" variant="ghost" onClick={onClearSelection} disabled={isLoading} className="text-muted-foreground" aria-label="Clear selection">
+          <Button size="icon-sm" variant="ghost" onClick={onClearSelection} disabled={isLoading} className="ml-auto shrink-0 text-muted-foreground sm:ml-0" aria-label="Clear selection">
             <X className="h-4 w-4" aria-hidden="true" />
           </Button>
 

@@ -94,7 +94,7 @@ export function AdminStats({
 
   return (
     <section aria-label="Program at a glance" className="rounded-2xl border border-foreground/20 bg-card stats-card">
-      <div className="grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-border">
+      <div className="grid grid-cols-2 lg:grid-cols-4 divide-y lg:divide-y-0 lg:divide-x divide-border">
         {primary.map((stat) => (
           <StatCell key={stat.label} {...stat} />
         ))}
@@ -121,7 +121,7 @@ function StatCell({
   return (
     <div
       className={cn(
-        'flex items-start gap-3 px-4 py-3 transition-colors',
+        'flex min-w-0 flex-col items-start gap-2 px-3 py-3 sm:flex-row sm:gap-3 sm:px-4 transition-colors',
         compact ? 'md:py-2.5' : 'md:py-4'
       )}
     >
@@ -141,7 +141,7 @@ function StatCell({
           </span>
           {hint && <Badge variant="amber">{hint}</Badge>}
         </div>
-        <p className={cn('text-xs text-muted-foreground truncate', compact ? 'mt-0' : 'mt-0.5')}>{label}</p>
+        <p className={cn('text-xs text-muted-foreground', compact ? 'mt-0' : 'mt-0.5')}>{label}</p>
       </div>
     </div>
   )

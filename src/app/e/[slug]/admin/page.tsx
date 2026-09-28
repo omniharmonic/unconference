@@ -312,7 +312,7 @@ export default function AdminPage() {
 
   return (
     <>
-      <div className="space-y-8">
+      <div className={cn('space-y-8', selectedIds.size > 0 && 'pb-48')}>
         <PageHeader
           title="Overview & sessions"
           subtitle="Make space for good ideas. Review proposals and help them find their place."
@@ -334,7 +334,7 @@ export default function AdminPage() {
             <AlertTitle>Your gathering is ready</AlertTitle>
             <AlertDescription className="flex flex-wrap items-center justify-between gap-3">
               <span>Next: add rooms and times so sessions have somewhere to go.</span>
-              <span className="flex gap-2">
+              <span className="flex flex-wrap gap-2">
                 <Button asChild size="sm"><Link href={`/e/${event.slug}/admin/setup`}>Add rooms and times</Link></Button>
                 <Button size="sm" variant="ghost" onClick={() => setJustCreated(false)}>Dismiss</Button>
               </span>
@@ -466,7 +466,7 @@ export default function AdminPage() {
                       {testSessionCount > 0 && <span className="ml-1 text-signal-amber">({testSessionCount} exist)</span>}
                     </p>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <Button variant="outline" size="sm" onClick={() => setDevConfirm('seed')} disabled={busy}><Beaker className="h-4 w-4 mr-1" aria-hidden="true" />Generate test sessions</Button>
                     {testSessionCount > 0 && (
                       <Button variant="outline" size="sm" onClick={() => setDevConfirm('clear')} disabled={busy} className="text-destructive hover:text-destructive"><Trash2 className="h-4 w-4 mr-1" aria-hidden="true" />Clear test data</Button>
@@ -489,8 +489,8 @@ export default function AdminPage() {
           </details>
         )}
 
-        <div id="session-review" className="scroll-mt-24 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div ref={tablistRef} className="flex gap-1 sm:gap-2 border-b overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 sm:border-b-0" role="tablist" aria-label="Session status">
+        <div id="session-review" className="scroll-mt-24 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div ref={tablistRef} className="min-w-0 flex gap-1 sm:gap-2 border-b overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 sm:border-b-0" role="tablist" aria-label="Session status">
             {TABS.map((tab) => {
               const count = tab === 'all' ? sessions.length : counts[tab]
               return (
@@ -514,12 +514,13 @@ export default function AdminPage() {
           </div>
           <SegmentedControl<ViewMode>
             aria-label="View"
+            className="self-start shrink-0"
             size="sm"
             value={viewMode}
             onValueChange={setViewMode}
             options={[
-              { value: 'table', label: <span className="sr-only sm:not-sr-only">Table</span>, icon: <Table className="h-4 w-4" aria-hidden="true" /> },
-              { value: 'cards', label: <span className="sr-only sm:not-sr-only">Cards</span>, icon: <Grid3X3 className="h-4 w-4" aria-hidden="true" /> },
+              { value: 'table', label: <span>Table</span>, icon: <Table className="h-4 w-4" aria-hidden="true" /> },
+              { value: 'cards', label: <span>Cards</span>, icon: <Grid3X3 className="h-4 w-4" aria-hidden="true" /> },
             ]}
           />
         </div>

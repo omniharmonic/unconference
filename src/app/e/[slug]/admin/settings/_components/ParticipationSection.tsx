@@ -91,7 +91,7 @@ export function ParticipationSection({ event }: { event: Event }) {
 
     <fieldset className="space-y-3">
       <legend className="text-sm font-medium">Session formats</legend>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-2 sm:grid-cols-3">
         {SESSION_FORMATS.map(format => <label key={format.value} className="flex cursor-pointer items-center gap-2 rounded-lg border p-3 text-sm has-[:checked]:border-primary has-[:checked]:bg-primary/5">
           <Checkbox checked={formats.includes(format.value)} onCheckedChange={() => toggleFormat(format.value)} aria-label={format.label} />{format.label}
         </label>)}
@@ -119,7 +119,7 @@ export function ParticipationSection({ event }: { event: Event }) {
 
     <div className="space-y-4">
       <Toggle id="unlimited-proposals" checked={unlimited} onChange={next => setMaxProposals(next ? 0 : 3)} label="No per-person proposal limit" description="When on, anyone can propose as many sessions as they like." />
-      {!unlimited ? <div className="ml-14">
+      {!unlimited ? <div className="sm:ml-14">
         <Field label="Proposals per person" htmlFor="max-proposals" error={fieldError('max_proposals_per_user')}>
           <Input id="max-proposals" type="number" min={1} max={1000} value={maxProposals} onChange={e => { const v = parseInt(e.target.value, 10); if (!Number.isNaN(v) && v >= 0) setMaxProposals(v) }} className="max-w-[160px]" />
         </Field>
@@ -150,7 +150,7 @@ export function ParticipationSection({ event }: { event: Event }) {
 
     <div className="space-y-4">
       <Toggle id="transcripts-enabled" checked={transcriptsEnabled} onChange={setTranscriptsEnabled} label="Session transcripts" description="Hosts, co-hosts and organizers can attach a transcript to a session (text, Markdown, WebVTT or SRT, 5 MB). Whoever attaches one confirms that everyone in the room was told the session was being recorded or transcribed. Transcripts are never published." />
-      {transcriptsEnabled ? <div className="ml-14">
+      {transcriptsEnabled ? <div className="sm:ml-14">
         <Field label="Who can read transcripts" htmlFor="transcripts-visibility" hint="Organizers always can. When this server has an AI provider configured, transcript text is sent to it for search and answers; the Knowledge page shows what is active." error={fieldError('transcripts_visibility')}>
           <Select id="transcripts-visibility" value={transcriptsVisibility} onChange={e => setTranscriptsVisibility(e.target.value as 'members' | 'organizers')} wrapperClassName="max-w-xs">
             <option value="members">Members of this gathering</option>

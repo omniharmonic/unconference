@@ -121,7 +121,7 @@ export function SessionTable({
   return (
     <div className="border rounded-xl overflow-hidden">
       {/* Header */}
-      <div className={cn('bg-muted/50 border-b px-4 py-2 hidden sm:grid gap-4 items-center', results ? 'sm:grid-cols-[auto_1fr_auto_auto_auto]' : 'sm:grid-cols-[auto_1fr_auto_auto]')}>
+      <div className={cn('bg-muted/50 border-b px-4 py-2 hidden lg:grid gap-4 items-center', results ? 'lg:grid-cols-[auto_1fr_auto_auto_auto]' : 'lg:grid-cols-[auto_1fr_auto_auto]')}>
         <Checkbox
           checked={allSelected || (someSelected ? 'indeterminate' : false)}
           onCheckedChange={handleSelectAll}
@@ -154,7 +154,7 @@ export function SessionTable({
               )}
               onClick={() => onRowClick?.(session)}
             >
-              <div className={cn('grid grid-cols-[auto_1fr_auto] gap-4 items-center', results ? 'sm:grid-cols-[auto_1fr_auto_auto_auto]' : 'sm:grid-cols-[auto_1fr_auto_auto]')}>
+              <div className={cn('grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-2 items-start lg:items-center lg:gap-4', results ? 'lg:grid-cols-[auto_1fr_auto_auto_auto]' : 'lg:grid-cols-[auto_1fr_auto_auto]')}>
                 <div onClick={(e) => handleSelectOne(session.id, e)}>
                   <Checkbox
                     checked={isSelected}
@@ -182,7 +182,7 @@ export function SessionTable({
                       </Badge>
                     )}
                   </div>
-                  <h4 className="font-medium line-clamp-1">{session.title}</h4>
+                  <h4 className="font-medium break-words lg:line-clamp-1">{session.title}</h4>
                   {hostLabel(session) && (
                     <p className="text-sm text-muted-foreground line-clamp-1">
                       {session.host_id ? `by ${hostLabel(session)}` : hostLabel(session)}
@@ -203,21 +203,21 @@ export function SessionTable({
                 </div>
 
                 {results && (
-                  <div className="hidden sm:flex items-center gap-1 text-sm" title="Votes in the closed round">
+                  <div className="hidden lg:flex items-center gap-1 text-sm" title="Votes in the closed round">
                     <ThumbsUp className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
                     <span className="font-medium tabular-nums">{results[session.id]?.votes ?? 0}</span>
                   </div>
                 )}
 
-                <div className="hidden sm:block text-sm text-muted-foreground tabular-nums">
+                <div className="hidden lg:block text-sm text-muted-foreground tabular-nums">
                   {session.duration ? `${session.duration} min` : '—'}
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="col-start-2 flex flex-wrap items-center gap-2 lg:col-start-auto">
                   <Badge variant={status.badge}>{status.label}</Badge>
 
                   {results && (
-                    <span className="sm:hidden text-xs text-muted-foreground flex items-center gap-1">
+                    <span className="lg:hidden text-xs text-muted-foreground flex items-center gap-1">
                       <ThumbsUp className="h-3 w-3" aria-hidden="true" />
                       {results[session.id]?.votes ?? 0}
                     </span>
@@ -269,7 +269,7 @@ export function SessionTable({
               {isExpanded && (
                 <div className="mt-3 pt-3 border-t space-y-3">
                   {session.description && (
-                    <p className="text-sm text-muted-foreground">
+                    <p className="break-words text-sm text-muted-foreground">
                       {session.description}
                     </p>
                   )}

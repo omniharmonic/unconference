@@ -510,7 +510,7 @@ function AdminTicketsPageInner() {
           {settings && (
             <Card>
               <CardContent className="py-4 space-y-3">
-                <div className="flex items-start justify-between gap-4">
+                <div className="flex flex-col items-start justify-between gap-4 sm:flex-row">
                   <div className="flex items-start gap-3">
                     <div className="p-2 rounded-lg bg-primary/10 mt-0.5">
                       <CreditCard className="h-5 w-5 text-primary" />
@@ -1042,7 +1042,7 @@ function AdminTicketsPageInner() {
                   </div>
                   <div className="space-y-3 md:col-span-2">
                     <label className="text-sm font-medium">Permissions</label>
-                    <div className="flex gap-6">
+                    <div className="flex flex-wrap gap-4 sm:gap-6">
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
                           type="checkbox"
@@ -1064,7 +1064,7 @@ function AdminTicketsPageInner() {
                     </div>
                   </div>
                 </div>
-                <div className="flex justify-end gap-2 mt-6">
+                <div className="flex flex-wrap justify-end gap-2 mt-6">
                   <Button
                     variant="outline"
                     onClick={() => {
@@ -1110,12 +1110,12 @@ function AdminTicketsPageInner() {
                   className={cn(!tier.is_active && 'opacity-60')}
                 >
                   <CardContent className="py-4">
-                    <div className="flex items-center gap-4">
-                      <div className="cursor-grab text-muted-foreground">
+                    <div className="flex flex-wrap items-start gap-3 sm:flex-nowrap sm:items-center sm:gap-4">
+                      <div className="hidden sm:block cursor-grab text-muted-foreground">
                         <GripVertical className="h-5 w-5" />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
+                      <div className="w-full min-w-0 sm:flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
                           <h3 className="font-semibold">{tier.name}</h3>
                           {!tier.is_active && (
                             <Badge variant="secondary">Inactive</Badge>
@@ -1127,7 +1127,7 @@ function AdminTicketsPageInner() {
                         {tier.description && (
                           <p className="text-sm text-muted-foreground mt-0.5">{tier.description}</p>
                         )}
-                        <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-2 text-sm text-muted-foreground">
                           <span className="font-medium text-foreground">
                             {formatPrice(tier.price_cents, tier.currency)}
                           </span>

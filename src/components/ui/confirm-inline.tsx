@@ -3,7 +3,7 @@
 /**
  * Inline confirmation for destructive or irreversible actions — the one vocabulary for
  * "are you sure?" (replaces native confirm() and the four ad-hoc patterns).
- * Always renders Cancel (outline) on the left and a verb button on the right.
+ * Cancel (outline) precedes the verb button; narrow layouts stack the two.
  *
  *   {confirming ? (
  *     <ConfirmInline
@@ -78,8 +78,8 @@ const ConfirmInline = React.forwardRef<HTMLDivElement, ConfirmInlineProps>(
         )}
         {...props}
       >
-        <p className={cn('leading-relaxed', layout === 'inline' && 'flex-1 min-w-[12rem]')}>{message}</p>
-        <div className="flex items-center justify-end gap-2">
+        <p className={cn('leading-relaxed', layout === 'inline' && 'flex-1 min-w-0 basis-48')}>{message}</p>
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
           <Button ref={cancelRef} type="button" variant="outline" size="sm" onClick={onCancel} disabled={loading}>
             {cancelLabel}
           </Button>
@@ -87,6 +87,7 @@ const ConfirmInline = React.forwardRef<HTMLDivElement, ConfirmInlineProps>(
             type="button"
             variant={destructive ? 'destructive' : 'default'}
             size="sm"
+            className="h-auto min-h-10 whitespace-normal"
             onClick={onConfirm}
             loading={loading}
           >

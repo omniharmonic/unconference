@@ -26,7 +26,7 @@ export function PhaseOverview() {
         <div className="flex flex-wrap items-center gap-3"><h2 id="phase-overview-title" className="text-lg font-semibold">Your gathering, right now</h2><Badge variant={phase.badge}>{phase.label}</Badge></div>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{STATUS_INFO[event.status].description}. {event.autoLifecycle ? 'Automatic phase changes are on. Due dates are checked every five minutes; publishing still needs your approval.' : 'Phase changes are manual. Dates limit when people can participate, but do not open the next phase. Use the action here, or turn on automatic phase changes.'}</p>
       </div>
-      <div className="flex flex-wrap gap-2 xl:justify-end">
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap xl:justify-end">
         {next && <Button onClick={() => setConfirm(true)} disabled={state.status === 'saving'}>{getTransitionLabel(event.status, next)}</Button>}
         <Button variant="outline" asChild><Link href={`${settings}#lifecycle`}>Phase settings</Link></Button>
       </div>

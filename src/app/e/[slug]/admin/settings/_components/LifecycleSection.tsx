@@ -61,7 +61,7 @@ export function LifecycleSection({ event, status, onChanged, hasIdentity }: Life
 
   return <SectionCard id="lifecycle" title="Lifecycle" description="Open each phase when your community is ready."
     footer={<SaveFeedback state={state} idleHint="Every phase change takes effect immediately." />}>
-    <div className="flex flex-wrap items-center gap-3 rounded-xl border bg-secondary/50 p-4">
+    <div className="flex flex-col items-start gap-3 rounded-xl sm:flex-row sm:items-center border bg-secondary/50 p-4">
       <div className="min-w-0 flex-1">
         <p className="text-xs text-muted-foreground">Current phase</p>
         <p className="text-xl font-semibold">{current.label}</p>
@@ -86,7 +86,7 @@ export function LifecycleSection({ event, status, onChanged, hasIdentity }: Life
         const needsConfirm = isIrreversibleTransition(next) || publishing
         const action = getTransitionLabel(status, next)
         return <li key={next} className={cn('rounded-xl border p-4', confirming && 'border-primary bg-primary/5')}>
-          <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:flex-wrap">
             <div className="min-w-0 flex-1">
               <p className="flex items-center gap-2 font-medium"><ArrowRight className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />{eventStatusBadge(next).label}</p>
               <p className="mt-1 text-sm text-muted-foreground">
@@ -96,7 +96,7 @@ export function LifecycleSection({ event, status, onChanged, hasIdentity }: Life
                 {isIrreversibleTransition(next) ? ' This cannot be undone from here.' : ''}
               </p>
             </div>
-            {!confirming ? <Button type="button" variant={destructive ? 'outline' : 'default'} className={cn(destructive && 'text-destructive hover:text-destructive')} disabled={saving && moving !== next} loading={moving === next}
+            {!confirming ? <Button type="button" variant={destructive ? 'outline' : 'default'} className={cn('h-auto min-h-11 w-full whitespace-normal sm:w-auto', destructive && 'text-destructive hover:text-destructive')} disabled={saving && moving !== next} loading={moving === next}
               onClick={() => needsConfirm ? setPending(next) : move(next)}>{action}</Button> : null}
           </div>
           {confirming ? <ConfirmInline className="mt-3" layout="inline" destructive={destructive} loading={saving} confirmLabel={action}

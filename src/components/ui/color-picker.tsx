@@ -222,7 +222,7 @@ export function ColorPicker({
 
       {/* Custom Color Input */}
       {(showCustomInput || (!isPresetColor && value)) && (
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {/* Live Preview / Native Color Picker */}
           <input
             ref={colorInputRef}

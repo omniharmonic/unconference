@@ -325,7 +325,7 @@ export default function AdminKnowledgePage() {
               <JobBadge job={embedJob} />
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <Button variant="outline" size="sm" loading={working === 'summaries'} disabled={!data.providers.chat.configured || !data.totals.with_transcript} onClick={() => run('summaries')}>
+              <Button variant="outline" size="sm" className="h-auto min-h-10 max-w-full whitespace-normal" loading={working === 'summaries'} disabled={!data.providers.chat.configured || !data.totals.with_transcript} onClick={() => run('summaries')}>
                 <FileText className="mr-1.5 h-4 w-4" aria-hidden />Generate summaries and themes
               </Button>
               <JobBadge job={summariesJob} />

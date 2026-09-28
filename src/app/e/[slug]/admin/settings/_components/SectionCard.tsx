@@ -66,7 +66,7 @@ export function SaveBar({ state, label = 'Save changes', disabled, dirty = false
   const feedbackState: SaveState = state.status === 'saved' && dirty ? { status: 'idle' } : state
   return <>
     <SaveFeedback state={feedbackState} idleHint={dirty ? idleHint : undefined} />
-    <Button type="submit" loading={saving} disabled={disabled}>{saving ? 'Saving…' : label}</Button>
+    <Button type="submit" className="h-auto min-h-11 w-full whitespace-normal sm:w-auto" loading={saving} disabled={disabled}>{saving ? 'Saving…' : label}</Button>
   </>
 }
 
@@ -95,14 +95,12 @@ interface ToggleProps {
   description?: string
 }
 
-/** Labelled switch row. Indent dependent fields with `ml-14` (switch width + gap). */
+/** Keep supporting text full-width on phones, aligned with the label on larger screens. */
 export function Toggle({ id, checked, onChange, label, description }: ToggleProps) {
-  return <div className="flex items-start gap-3">
+  return <div className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-3 gap-y-2">
     <Switch id={id} checked={checked} onCheckedChange={onChange} aria-labelledby={`${id}-label`} className="mt-0.5" />
-    <div className="space-y-1">
-      <label id={`${id}-label`} htmlFor={id} className="cursor-pointer text-sm font-medium">{label}</label>
-      {description ? <p className="text-sm text-muted-foreground">{description}</p> : null}
-    </div>
+    <label id={`${id}-label`} htmlFor={id} className="cursor-pointer text-sm font-medium">{label}</label>
+    {description ? <p className="col-span-2 text-sm text-muted-foreground sm:col-span-1 sm:col-start-2">{description}</p> : null}
   </div>
 }
 

@@ -85,7 +85,7 @@ export function SessionFilters({
   return (
     <div className="space-y-3">
       <div className="flex gap-2">
-        <div className="relative flex-1">
+        <div className="relative min-w-0 flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
           <Input
             type="search"
@@ -116,7 +116,7 @@ export function SessionFilters({
           aria-controls={`${id}-panel`}
         >
           <Filter className="h-4 w-4" aria-hidden="true" />
-          <span className="hidden sm:inline">Filters</span>
+          <span className="sr-only sm:not-sr-only">Filters</span>
           {activeFilterCount > 0 && (
             <Badge variant="default" className="ml-1 h-5 min-w-5 justify-center px-1.5 py-0">
               {activeFilterCount}

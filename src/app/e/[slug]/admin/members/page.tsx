@@ -319,6 +319,7 @@ export default function AdminMembersPage() {
               {!inviteFinished && (
                 <SegmentedControl<'link' | 'email'>
                   aria-label="Invitation method"
+                  className="grid w-full grid-cols-2 sm:inline-flex sm:w-auto [&>button]:h-auto [&>button]:min-h-11 [&>button]:whitespace-normal [&_svg]:shrink-0"
                   value={inviteType}
                   onValueChange={setInviteType}
                   options={[

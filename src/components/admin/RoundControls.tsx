@@ -180,7 +180,7 @@ export function RoundControls({ eventSlug, timezone }: { eventSlug: string; time
 
               {open && (
                 <>
-                  <label className="flex flex-col gap-1 text-xs text-muted-foreground">
+                  <label className="flex w-full min-w-0 flex-col gap-1 text-xs text-muted-foreground sm:w-auto">
                     New closing time ({timezone})
                     <Input
                       type="datetime-local"
@@ -189,7 +189,7 @@ export function RoundControls({ eventSlug, timezone }: { eventSlug: string; time
                       onChange={(e) => setExtendTo((prev) => ({ ...prev, [phase]: e.target.value }))}
                       // The panel sits inside the settings form; Enter here must not save settings.
                       onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault() }}
-                      className="max-w-[15rem]"
+                      className="min-w-0 max-w-full sm:max-w-[15rem]"
                     />
                   </label>
                   <Button
