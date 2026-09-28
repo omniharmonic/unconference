@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import Link from 'next/link'
-import { ArrowUpRight, Loader2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import { useEvent, useEventNetwork, useEventRole } from '@/contexts/EventContext'
 import { useAuth } from '@/hooks/useAuth'
 import { Button } from '@/components/ui/button'
@@ -74,7 +74,7 @@ export default function EventSettingsPage() {
       <Card><CardContent className="p-6 sm:p-8">
         <h1 className="page-title mb-3">Organizer access required</h1>
         <p className="mb-5 text-muted-foreground">Only this gathering’s owner and admins can change these settings.</p>
-        <Button asChild variant="outline"><Link href={`/e/${event.slug}`}>Gathering page</Link></Button>
+        <Button asChild variant="outline"><Link href={`/e/${event.slug}?view=about`}>Gathering page</Link></Button>
       </CardContent></Card>
     </div>
   }
@@ -83,7 +83,6 @@ export default function EventSettingsPage() {
     <PageHeader
       title="Settings"
       subtitle={<>Currently <span className="font-medium text-foreground">{eventStatusBadge(status).label.toLowerCase()}</span>. Each section saves on its own.</>}
-      actions={<Button variant="outline" asChild><Link href={`/e/${event.slug}`}>Gathering page<ArrowUpRight className="ml-2 h-4 w-4" aria-hidden="true" /></Link></Button>}
       className="mb-0"
     />
     <nav aria-label="Settings sections" className="-mx-1 overflow-x-auto">

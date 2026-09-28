@@ -4,7 +4,7 @@ import { EventLogo } from '@/components/EventLogo'
 
 import { isParticipationOpen } from '@/lib/events/lifecycle'
 import * as React from 'react'
-import { WorkspaceHeader, type WorkspaceBack } from '@/components/WorkspaceHeader'
+import { WorkspaceHeader } from '@/components/WorkspaceHeader'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
@@ -94,18 +94,6 @@ export function workspaceLabel(pathname: string | null, eventSlug: string): stri
   const base = `/e/${eventSlug}`
   const hit = ROUTE_LABELS.find(([suffix]) => pathname === `${base}${suffix}` || pathname.startsWith(`${base}${suffix}/`))
   return hit?.[1] ?? 'Your gathering'
-}
-
-/**
- * Where the mobile context row's back link goes, when there is one (design §2.3, §5.1).
- * A session page belongs to the list it came from; a top-level page has nowhere to go back to
- * and shows its own name instead.
- */
-export function workspaceBack(pathname: string | null, eventSlug: string): WorkspaceBack | null {
-  if (!pathname) return null
-  const base = `/e/${eventSlug}`
-  if (pathname.startsWith(`${base}/sessions/`)) return { href: `${base}/sessions`, label: 'Sessions' }
-  return null
 }
 
 // ============================================================================
@@ -207,7 +195,7 @@ function DashboardShell({ children }: DashboardLayoutProps) {
       <aside className={cn('hidden md:flex flex-col flex-shrink-0 border-r border-border bg-card fixed inset-y-0 left-0 z-20', SIDEBAR_WIDTH)}>
         {/* Event branding */}
         <div className="p-5 min-h-[100px] border-b border-border">
-          <Link href={`/e/${event.slug}`} className="flex items-center gap-2.5 group">
+          <Link href={`/e/${event.slug}/dashboard`} className="flex items-center gap-2.5 group">
             <EventLogo url={event.logoUrl} name={event.name} className="h-9 w-9 shrink-0 rounded-lg" />
             <div className="min-w-0">
               <div className="font-display font-bold text-sm leading-tight truncate group-hover:text-primary transition-colors">
@@ -242,7 +230,7 @@ function DashboardShell({ children }: DashboardLayoutProps) {
       {/* ─── Mobile Header: the gathering, the bell, and one tap to your profile ─── */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-30 border-b border-border bg-background">
         <div className="flex items-center justify-between h-16 px-4">
-          <Link href={`/e/${event.slug}`} className="flex items-center gap-2 min-w-0 flex-1 mr-2">
+          <Link href={`/e/${event.slug}/dashboard`} className="flex items-center gap-2 min-w-0 flex-1 mr-2">
             <EventLogo url={event.logoUrl} name={event.name} className="h-8 w-8 shrink-0 rounded-lg" />
             <span className="font-display font-bold text-sm truncate">{event.name}</span>
           </Link>
@@ -264,7 +252,7 @@ function DashboardShell({ children }: DashboardLayoutProps) {
         {/* Mobile spacer for fixed header */}
         <div className="h-16 md:hidden" />
 
-        <WorkspaceHeader label={workspaceLabel(pathname, event.slug)} back={workspaceBack(pathname, event.slug)} />
+        <WorkspaceHeader label={workspaceLabel(pathname, event.slug)} />
         <div className="workspace-content">
           {children}
         </div>

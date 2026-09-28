@@ -4,6 +4,7 @@ import type { EventActivity } from '@/lib/events/activity'
 export function GatheringPulse({ activity, slug, sessions, scheduled, participants }: {
   activity: EventActivity; slug: string; sessions: number; scheduled: number; participants: number | null
 }) {
+  const maximum = Math.max(...activity.entries.map(entry => entry.count), 1)
   return <section aria-labelledby="gathering-pulse-title" className="overflow-hidden rounded-2xl border bg-card">
     <div className="grid lg:grid-cols-[1fr_1.4fr]">
       <div className="p-5 sm:p-6 lg:border-r">
@@ -16,9 +17,9 @@ export function GatheringPulse({ activity, slug, sessions, scheduled, participan
         <p className="mt-2 text-xs text-muted-foreground">{sessions ? `${scheduled} of ${sessions} sessions have a place in the program.` : 'The first proposal starts the conversation.'}</p>
       </div>
       <div className="border-t p-5 sm:p-6 lg:border-t-0">
-        <h3 className="font-semibold">{activity.mode === 'results' ? 'Most supported · closed voting' : 'Publicly backed sessions'}</h3>
+        <h3 className="font-semibold">{activity.mode === 'results' ? 'Session leaderboard · final votes' : 'Publicly backed sessions'}</h3>
         <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{activity.mode === 'results' ? `Finalized results only. Sessions supported by fewer than ${activity.threshold} voters are withheld for privacy.` : 'Voluntary public endorsements, separate from private votes. Ballot totals stay hidden until voting closes.'}</p>
-        {activity.entries.length ? <ol className="mt-3 divide-y">{activity.entries.map(entry => <li key={entry.id}><Link href={`/e/${slug}/sessions/${entry.id}`} className="flex min-h-14 items-center justify-between gap-4 rounded-lg py-3 hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"><span className="min-w-0 break-words text-sm font-medium">{entry.title}</span><span className="shrink-0 text-right"><span className="block font-semibold tabular-nums">{entry.count}</span><span className="block text-xs text-muted-foreground">{activity.mode === 'results' ? 'votes' : 'endorsements'}</span></span></Link></li>)}</ol> : <p className="mt-5 text-sm text-muted-foreground">{activity.mode === 'results' ? 'No session has a shareable result yet.' : 'No public endorsements yet. Explore sessions to find an idea you want to stand behind.'}</p>}
+        {activity.entries.length ? <ol className="mt-3 divide-y">{activity.entries.map((entry, index) => <li key={entry.id}><Link href={`/e/${slug}/sessions/${entry.id}`} className="flex min-h-14 items-center justify-between gap-4 rounded-lg py-3 hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"><span className="flex min-w-0 flex-1 items-center gap-3"><span className="w-6 shrink-0 text-lg font-semibold tabular-nums text-muted-foreground">{index + 1}</span><span className="min-w-0 flex-1 break-words text-sm font-medium">{entry.title}<span className="mt-2 block h-1 overflow-hidden rounded-full bg-muted" aria-hidden="true"><span className="block h-full bg-primary" style={{ width: `${Math.max(2, entry.count / maximum * 100)}%` }} /></span></span></span><span className="w-24 shrink-0 text-right"><span className="block font-semibold tabular-nums">{entry.count}</span><span className="block text-xs text-muted-foreground">{activity.mode === 'results' ? 'votes' : 'endorsements'}</span></span></Link></li>)}</ol> : <p className="mt-5 text-sm text-muted-foreground">{activity.mode === 'results' ? 'No session has a shareable result yet.' : 'No public endorsements yet. Explore sessions to find an idea you want to stand behind.'}</p>}
       </div>
     </div>
   </section>

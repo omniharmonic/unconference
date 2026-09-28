@@ -1,5 +1,7 @@
 'use client'
 
+import { PLATFORM_HOME } from '@/lib/site-url'
+
 import { EventLogo } from '@/components/EventLogo'
 import * as React from 'react'
 import Link from 'next/link'
@@ -89,7 +91,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <h1 className="text-xl font-display font-semibold mb-2">Organizers only</h1>
         <p className="text-sm text-muted-foreground mb-6">{role ? 'Your role in this gathering does not include the organizer workspace.' : 'Sign in with an organizer account to open the organizer workspace.'}</p>
         <div className="flex flex-wrap justify-center gap-2">
-          <Button asChild variant="outline"><Link href={`/e/${event.slug}`}>Gathering page</Link></Button>
+          <Button asChild variant="outline"><Link href={`/e/${event.slug}?view=about`}>Gathering page</Link></Button>
           {!role && <Button asChild><Link href={`/login?returnTo=${encodeURIComponent(`/e/${event.slug}/admin`)}`}>Sign in</Link></Button>}
         </div>
       </div>
@@ -106,7 +108,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return <AccountModalProvider gathering={{ slug: event.slug, name: event.name }}><div className="min-h-screen bg-background flex">
     <a href="#workspace-main" className="skip-link">Skip to content</a>
     <aside className="hidden md:flex flex-col w-[240px] lg:w-[260px] border-r bg-card fixed inset-y-0 left-0 z-20">
-      <Link href={`/e/${event.slug}`} className="flex items-center gap-3 h-[76px] px-6 border-b font-semibold"><NetworkMark className="h-7 w-7 text-primary"/>unconference</Link>
+      <Link href={PLATFORM_HOME} className="flex items-center gap-3 h-[76px] px-6 border-b font-semibold"><NetworkMark className="h-7 w-7 text-primary"/>unconference</Link>
       <div className="px-5 py-6"><EventLogo url={event.logoUrl} name={event.name} className="mb-3 h-12 w-12" /><p className="font-semibold text-lg leading-snug mb-2 break-words">{event.name}</p><Badge variant="secondary">Organizer workspace</Badge></div>
       <div className="flex-1 overflow-y-auto px-3 pb-6">{navigation}</div>
       <div className="border-t p-3 space-y-2">
@@ -117,7 +119,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <div className="md:hidden fixed top-0 inset-x-0 z-30 border-b bg-card">
       {/* Same header as the attendee shell: one tap to your profile (design §2.1). The organizer
           workspace keeps its own nav behind the hamburger and has no bottom bar. */}
-      <div className="h-16 flex items-center justify-between px-4 gap-2"><Link href={`/e/${event.slug}`} className="flex items-center gap-2 min-w-0 flex-1"><EventLogo url={event.logoUrl} name={event.name} /><span className="truncate font-semibold">{event.name}</span></Link><div className="flex shrink-0 items-center gap-0.5"><WorkspaceUserMenu variant="avatar"/><Button variant="ghost" size="icon" onClick={() => setOpen(!open)} aria-label={open ? 'Close organizer navigation' : 'Open organizer navigation'} aria-expanded={open} aria-controls="admin-mobile-nav">{open ? <X className="h-5 w-5"/> : <Menu className="h-5 w-5"/>}</Button></div></div>
+      <div className="h-16 flex items-center justify-between px-4 gap-2"><Link href={`/e/${event.slug}/dashboard`} className="flex items-center gap-2 min-w-0 flex-1"><EventLogo url={event.logoUrl} name={event.name} /><span className="truncate font-semibold">{event.name}</span></Link><div className="flex shrink-0 items-center gap-0.5"><WorkspaceUserMenu variant="avatar"/><Button variant="ghost" size="icon" onClick={() => setOpen(!open)} aria-label={open ? 'Close organizer navigation' : 'Open organizer navigation'} aria-expanded={open} aria-controls="admin-mobile-nav">{open ? <X className="h-5 w-5"/> : <Menu className="h-5 w-5"/>}</Button></div></div>
       {open && <div id="admin-mobile-nav" className="px-4 py-5 border-t max-h-[calc(100dvh-4rem)] overflow-y-auto space-y-4">
         {navigation}
         <div className="border-t pt-4 space-y-2">

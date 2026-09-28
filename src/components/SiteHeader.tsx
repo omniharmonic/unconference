@@ -1,5 +1,7 @@
 'use client'
 
+import { PLATFORM_HOME } from '@/lib/site-url'
+
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { LogOut, Plus, UserRound, CalendarRange, ChevronDown } from 'lucide-react'
@@ -33,7 +35,7 @@ export function SiteHeader() {
     <>
     <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur-md">
       <div className="container mx-auto px-5 flex h-[76px] items-center justify-between gap-3">
-        <Link href="/" className="flex items-center gap-2.5 font-display font-bold text-xl tracking-[-0.045em]">
+        <Link href={PLATFORM_HOME} className="flex items-center gap-2.5 font-display font-bold text-xl tracking-[-0.045em]">
           <NetworkMark className="h-8 w-8 text-primary shrink-0" />
           <span className="leading-tight">unconference</span>
         </Link>
@@ -82,7 +84,7 @@ export function SiteHeader() {
                   <DropdownMenuItem onSelect={() => router.push('/account')} className="gap-2">
                     <UserRound className="h-4 w-4" aria-hidden="true" /> Account
                   </DropdownMenuItem>
-                  <DropdownMenuItem onSelect={() => router.push('/#my-gatherings')} className="gap-2">
+                  <DropdownMenuItem onSelect={() => router.push(`${PLATFORM_HOME}#my-gatherings`)} className="gap-2">
                     <CalendarRange className="h-4 w-4" aria-hidden="true" /> My gatherings
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />

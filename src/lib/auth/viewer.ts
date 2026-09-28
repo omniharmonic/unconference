@@ -58,7 +58,7 @@ export async function getViewer(request?: Request): Promise<Viewer | null> {
   const row = rows[0]
   if (!row) return null
   if (new Date(row.expires_at).getTime() <= Date.now()) {
-    await sql`delete from at_sessions where id = ${sessionId}`
+    await sql`delete from at_sessions where id = ${sessionId} and expires_at <= now()`
     return null
   }
   return { accountId: row.account_id, did: row.did, handle: row.handle, email: row.email, kind: row.kind, sessionId: row.session_id }

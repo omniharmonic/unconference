@@ -95,6 +95,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [load])
 
+  // Renew only during visible, signed-in use. Network loss never clears local identity.
+  React.useEffect(() => {
+    if (!user?.id) return
+    const controller = new AbortController()
+    let lastAttempt = 0
+    let disposed = false
+    const renew = async () => {
+      if (document.visibilityState !== 'visible' || !navigator.onLine || Date.now() - lastAttempt < 300_000) return
+      lastAttempt = Date.now()
+      try { await apiFetch('/api/auth/renew', { method: 'POST', signal: controller.signal }) }
+      catch (err) {
+        if (!disposed && err instanceof ApiError && err.status === 401) await load()
+      }
+    }
+    void renew()
+    const onActive = () => { void renew() }
+    const timer = window.setInterval(onActive, 3600_000)
+    document.addEventListener('visibilitychange', onActive)
+    window.addEventListener('online', onActive)
+    return () => {
+      disposed = true
+      controller.abort()
+      window.clearInterval(timer)
+      document.removeEventListener('visibilitychange', onActive)
+      window.removeEventListener('online', onActive)
+    }
+  }, [user?.id, load])
+
   const signIn = React.useCallback(async (email: string, returnTo?: string): Promise<SignInResult> => {
     try {
       const result = await apiFetch<{ ok: true; devVerifyUrl?: string }>('/api/auth/email', {

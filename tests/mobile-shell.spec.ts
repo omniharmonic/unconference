@@ -55,6 +55,8 @@ test.describe('mobile shell: floating bar, More sheet, context row', () => {
   async function openWorkspace(page: Page, path: string) {
     await page.goto(path, { waitUntil: 'domcontentloaded' })
     await expect(page.getByTestId('workspace-context')).toBeVisible()
+    // The context row is server-rendered; the account button appears only after client auth.
+    await expect(page.locator('button[aria-label^="Account"]').filter({ visible: true }).first()).toBeVisible({ timeout: 60_000 })
   }
 
   const bar = (page: Page) => page.getByTestId('mobile-tab-bar')
@@ -196,6 +198,7 @@ test.describe('mobile shell: floating bar, More sheet, context row', () => {
         'Propose a session',
         'Organizer workspace',
         'Notification preferences',
+        'My gatherings',
         'Account',
         'Sign out',
       ])
@@ -224,7 +227,7 @@ test.describe('mobile shell: floating bar, More sheet, context row', () => {
       await expect(sheet).toBeVisible()
 
       await sheet.getByRole('link', { name: 'My votes' }).click()
-      await expect(page).toHaveURL(new RegExp(`/e/${gathering.slug}/my-votes`))
+      await expect(page).toHaveURL(new RegExp(`/e/${gathering.slug}/my-votes`), { timeout: 60_000 })
       await expect(sheet).toBeHidden()
 
       // And on a route change the sheet itself did not start: going back closes it too.
@@ -321,16 +324,13 @@ test.describe('mobile shell: floating bar, More sheet, context row', () => {
 
   // ── the context row ───────────────────────────────────────────────────────────────────────
 
-  test('the context row says where back goes on a session page, and where you are elsewhere', async ({ browser }) => {
+  test('the context row labels the page without duplicating bottom navigation', async ({ browser }) => {
     const { page, close } = await shell(browser, PHONE)
     try {
       await openWorkspace(page, `/e/${gathering.slug}/sessions/${sessionId}`)
       const row = page.getByTestId('workspace-context')
-      const back = row.getByRole('link', { name: 'Sessions' })
-      await expect(back).toBeVisible()
-      await expect(back).toHaveAttribute('href', `/e/${gathering.slug}/sessions`)
-      await expect(row.getByRole('link', { name: /Gathering page/ })).toBeVisible()
-      // One line, not two: the in-content "Back to sessions" button is gone.
+      await expect(row).toContainText('Sessions')
+      await expect(row.getByRole('link')).toHaveCount(0)
       expect((await row.boundingBox())!.height).toBeLessThanOrEqual(48)
       await expect(page.getByRole('link', { name: 'Back to sessions' })).toHaveCount(0)
 

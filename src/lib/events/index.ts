@@ -198,13 +198,18 @@ export interface OrganizedEvent {
   has_identity: boolean
 }
 
-/** Gatherings the account organizes (owner/admin), newest first. */
-export async function getOrganizedEvents(accountId: string): Promise<OrganizedEvent[]> {
+/** All gatherings this account has joined, including private and draft memberships. */
+export async function getMemberEvents(accountId: string): Promise<OrganizedEvent[]> {
   return sql<OrganizedEvent[]>`
     select e.id, e.slug, e.name, e.tagline, e.start_date, e.end_date, e.location_name, e.status, e.logo_url,
            m.role, (e.actor_did is not null) as has_identity
     from event_members m join events e on e.id = m.event_id
-    where m.user_id = ${accountId} and m.role in ('owner', 'admin')
+    where m.user_id = ${accountId}
     order by e.start_date desc, e.name asc
   `
+}
+
+/** Gatherings the account organizes (owner/admin), newest first. */
+export async function getOrganizedEvents(accountId: string): Promise<OrganizedEvent[]> {
+  return (await getMemberEvents(accountId)).filter(event => event.role === 'owner' || event.role === 'admin')
 }

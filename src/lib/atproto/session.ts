@@ -7,7 +7,7 @@ import 'server-only'
  * round-trip; the row carries the DID, the account, which door the session came through,
  * and its expiry. A sign-out is a DELETE.
  *
- * `HttpOnly; SameSite=Lax; Path=/; Max-Age=30d`, `Secure` over https. `Lax`, not
+ * `HttpOnly; SameSite=Lax; Path=/; Max-Age=90d`, `Secure` over https. `Lax`, not
  * `Strict`, because the OAuth callback and the magic link are top-level cross-site GETs.
  *
  * When `NEXT_PUBLIC_APP_URL` names a real host, the cookie is written with
@@ -21,7 +21,7 @@ import { sql } from '@/lib/db'
 import { publicUrl, sessionSecret } from './config'
 
 export const AT_SESSION_COOKIE = 'sp_at_session'
-export const AT_SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000
+export const AT_SESSION_TTL_MS = 90 * 24 * 60 * 60 * 1000
 
 export type AtSessionKind = 'custodial' | 'oauth'
 
@@ -87,8 +87,8 @@ function cookieAttributes(maxAgeSeconds: number, domain: string | null): string 
 }
 
 /** `Set-Cookie` header value that installs `value`. */
-export function sessionCookieHeader(value: string): string {
-  return `${AT_SESSION_COOKIE}=${value}; ${cookieAttributes(Math.floor(AT_SESSION_TTL_MS / 1000), sessionCookieDomain())}`
+export function sessionCookieHeader(value: string, maxAgeSeconds = Math.floor(AT_SESSION_TTL_MS / 1000)): string {
+  return `${AT_SESSION_COOKIE}=${value}; ${cookieAttributes(maxAgeSeconds, sessionCookieDomain())}`
 }
 
 /**
@@ -184,7 +184,7 @@ export async function readAtSession(source?: SessionSource): Promise<AtSession |
   if (!row) return null
   const expiresAt = new Date(row.expires_at)
   if (expiresAt.getTime() <= Date.now()) {
-    await sql`delete from at_sessions where id = ${id}`
+    await sql`delete from at_sessions where id = ${id} and expires_at <= now()`
     return null
   }
   return { id: row.id, did: row.did, accountId: row.user_id, userId: row.user_id, kind: row.kind, expiresAt }

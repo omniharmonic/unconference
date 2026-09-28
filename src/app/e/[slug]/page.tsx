@@ -1,7 +1,7 @@
 import { loadEventActivity } from '@/lib/events/activity'
 import { GatheringPulse } from '@/components/home/GatheringPulse'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { ArrowRight, Calendar, Globe, MapPin, MessagesSquare, Users, Vote, FileText } from 'lucide-react'
 import { GatheringArtwork } from '@/components/GatheringArtwork'
 import { Button } from '@/components/ui/button'
@@ -66,13 +66,14 @@ async function loadStats(eventId: string): Promise<{ stats: EventStats; recent: 
   }
 }
 
-export default async function EventPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function EventPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ view?: string }> }) {
   const { slug } = await params
   const access = await getEventAccess(slug)
   // The layout renders the access gate; this is only reached for a viewable gathering.
   if (!access.ok) notFound()
 
   const { event, row, viewer, membership } = access
+  if (membership && (await searchParams).view !== 'about') redirect(`/e/${event.slug}/dashboard`)
   const isMember = Boolean(membership)
   const isAdmin = membership ? isAdminRole(membership.role) : false
   const network = networkOf(row)

@@ -1,5 +1,7 @@
 'use client'
 
+import { PLATFORM_HOME } from '@/lib/site-url'
+
 /**
  * The signed-in user block shared by the attendee workspace and the organizer workspace:
  * avatar + name opening a menu (Account · Notification preferences · Gathering page · Sign out),
@@ -210,13 +212,16 @@ export function WorkspaceUserMenu({
               {user.handle && <span className="block truncate text-xs text-muted-foreground">@{user.handle}</span>}
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={() => router.push(`${PLATFORM_HOME}#my-gatherings`)} className="gap-2">
+              <ExternalLink className="h-4 w-4" aria-hidden="true" /> My gatherings
+            </DropdownMenuItem>
             <DropdownMenuItem onSelect={openAccount} className="gap-2">
               <UserRound className="h-4 w-4" aria-hidden="true" /> Account
             </DropdownMenuItem>
             <DropdownMenuItem onSelect={() => router.push(`/e/${event.slug}/settings/notifications`)} className="gap-2">
               <Bell className="h-4 w-4" aria-hidden="true" /> Notification preferences
             </DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => router.push(`/e/${event.slug}`)} className="gap-2">
+            <DropdownMenuItem onSelect={() => router.push(`/e/${event.slug}?view=about`)} className="gap-2">
               <ExternalLink className="h-4 w-4" aria-hidden="true" /> Gathering page
             </DropdownMenuItem>
             <DropdownMenuSeparator />

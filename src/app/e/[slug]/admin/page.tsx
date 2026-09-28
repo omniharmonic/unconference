@@ -427,7 +427,7 @@ export default function AdminPage() {
             {pendingCount > 0 ? (
               <Button onClick={reviewProposals}>Review proposals</Button>
             ) : (
-              <Button asChild variant="outline"><Link href={`/e/${event.slug}`}>Gathering page<ArrowUpRight className="h-4 w-4 ml-2" aria-hidden="true" /></Link></Button>
+              <Button asChild variant="outline"><Link href={`/e/${event.slug}?view=about`}>Gathering page<ArrowUpRight className="h-4 w-4 ml-2" aria-hidden="true" /></Link></Button>
             )}
           </div>
           <div className="rounded-2xl border bg-card p-6 flex flex-col">

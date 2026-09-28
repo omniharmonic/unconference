@@ -1,5 +1,7 @@
 'use client'
 
+import { PLATFORM_HOME } from '@/lib/site-url'
+
 /**
  * Everything the bottom bar's four tabs do not hold, one tap deeper (design §2.2).
  *
@@ -14,6 +16,7 @@
 import * as React from 'react'
 import Link from 'next/link'
 import {
+  CalendarRange,
   ClipboardList,
   LogOut,
   MessageCircleQuestion,
@@ -68,6 +71,7 @@ export function MoreSheet({
     ...(proposalsOpen ? [{ href: `${base}/propose`, label: 'Propose a session', icon: PlusCircle }] : []),
     ...(isOrganizer ? [{ href: `${base}/admin`, label: 'Organizer workspace', icon: Settings }] : []),
     { href: `${base}/settings/notifications`, label: 'Notification preferences', icon: Bell },
+    ...(signedIn ? [{ href: `${PLATFORM_HOME}#my-gatherings`, label: 'My gatherings', icon: CalendarRange }] : []),
   ]
 
   return (

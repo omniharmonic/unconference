@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { getViewer } from '@/lib/auth/viewer';
 import { NetworkMark } from '@/components/GatheringArtwork';
 import { GatheringHero, GatheringStory } from '@/components/landing/GatheringStory';
 import { Calendar, MapPin, Users, ArrowRight, ChevronRight, Plus } from 'lucide-react';
@@ -125,16 +126,7 @@ async function fetchEvents() {
   return { featuredEvents, upcomingEvents, allEvents: events, loadFailed: false };
 }
 
-/**
- * Platform landing page
- *
- * Gathering discovery hub showing:
- * - Hero section with CTA
- * - My gatherings (for signed-in organizers, right under the hero)
- * - Featured gatherings carousel
- * - Upcoming gatherings grid
- * - Create-a-gathering CTA
- */
+// Signed-in members get their gathering hub; visitors get the introduction.
 // Upcoming gatherings shown on the homepage; the full list lives at /events.
 const HOMEPAGE_UPCOMING_LIMIT = 6;
 
@@ -142,7 +134,7 @@ const HOMEPAGE_UPCOMING_LIMIT = 6;
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  const { featuredEvents, upcomingEvents, allEvents, loadFailed } = await fetchEvents();
+  const [viewer, { featuredEvents, upcomingEvents, allEvents, loadFailed }] = await Promise.all([getViewer(), fetchEvents()]);
   const pastEvents = allEvents.filter(e => !upcomingEvents.some(upcoming => upcoming.id === e.id));
 
   const displayedUpcoming = upcomingEvents.slice(0, HOMEPAGE_UPCOMING_LIMIT);
@@ -152,14 +144,15 @@ export default async function HomePage() {
     <div className="min-h-screen bg-background flex flex-col">
       <SiteHeader />
       <main className="flex-1">
-        <GatheringHero />
-        <MyEventsSection />
+        {viewer ? <MyEventsSection /> : <GatheringHero />}
+        {!viewer && <>
         <section aria-label="Built for participant-led events" className="utility-strip">
           <div><h2>A shared agenda</h2><p>People propose. The community chooses. Organizers make room.</p></div>
           <div><h2>Your identity comes with you</h2><p>Sign in with Bluesky or email. Keep one profile across gatherings.</p></div>
           <div><h2>Tickets that support the commons</h2><p>Free or paid admission. Organizers choose a platform contribution from 1%.</p></div>
         </section>
         <GatheringStory />
+        </>}
 
         {featuredEvents.length > 0 && (
           <FeaturedEventsCarousel events={featuredEvents} />
@@ -172,7 +165,7 @@ export default async function HomePage() {
 
         {pastEvents.length > 0 && <section className="container mx-auto px-5 py-10" aria-labelledby="past-heading"><h2 id="past-heading" className="text-4xl sm:text-5xl font-semibold tracking-tight mb-4">Previously, together.</h2><p className="text-muted-foreground mb-6">Revisit the ideas and people behind past gatherings.</p><div className="grid grid-cols-1 md:grid-cols-2 gap-6">{pastEvents.map(event => <EventCard key={event.id} event={event}/>)}</div></section>}
 
-        <CreateEventCTA />
+        {!viewer && <CreateEventCTA />}
       </main>
 
       <Footer variant="minimal" />

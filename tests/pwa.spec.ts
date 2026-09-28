@@ -242,6 +242,8 @@ test.describe('PWA: the offer to install, and the one dismissal that sticks', ()
   async function openMoreSheet(page: Page) {
     const bar = page.getByTestId('mobile-tab-bar').first()
     await expect(bar).toBeVisible({ timeout: 60_000 })
+    // The bar is present in SSR before its click handlers are hydrated.
+    await expect(page.locator('button[aria-label^="Account,"]').filter({ visible: true }).first()).toBeVisible({ timeout: 60_000 })
     await bar.locator('button').click()
     await expect(page.getByTestId('more-sheet').first()).toBeVisible()
   }

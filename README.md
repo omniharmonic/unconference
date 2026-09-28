@@ -31,6 +31,8 @@ Paid sales require a configured Stripe platform, signed webhooks, and an eligibl
 
 For push, enable **Notifications on this device** in a gathering's notification settings, then select the Push categories. On iPhone/iPad, open the app from the Home Screen first. Signing out disconnects that device. Push payloads contain a generic update notice, not private gathering content.
 
+Web sessions last 90 days and renew during active use. Expired or signed-out sessions cannot be renewed; sign-out still revokes the session immediately.
+
 ## ATProto and privacy
 
 ATProto makes selected public contributions portable; it does not make the entire event database public.

@@ -992,6 +992,13 @@ test.describe('map', () => {
       await memberPage.locator('[data-testid="gathering-map"] canvas.maplibregl-canvas').first().waitFor({ timeout: 30_000 }).catch(() => undefined)
       await expect(memberPage.locator('.sp-map-shape-label', { hasText: roomName })).toBeVisible({ timeout: 30_000 })
       await context.close()
+    } catch (error) {
+      // This test owns its WebGL browser, so Playwright cannot capture it automatically.
+      for (const page of browser.contexts().flatMap(context => context.pages())) {
+        await test.info().attach('map-failure', { body: await page.screenshot({ fullPage: true }), contentType: 'image/png' })
+        await test.info().attach('map-page', { body: await page.locator('body').innerText(), contentType: 'text/plain' })
+      }
+      throw error
     } finally {
       await browser.close()
       await sql`delete from venues where event_id = ${gathering.id} and name = ${roomName}`

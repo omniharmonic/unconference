@@ -4,29 +4,28 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { getViewer } from '@/lib/auth/viewer';
-import { getOrganizedEvents, type OrganizedEvent } from '@/lib/events';
+import { getMemberEvents, type OrganizedEvent } from '@/lib/events';
 import { eventStatusBadge } from '@/lib/labels';
 import { formatDateRange } from '@/lib/format';
 
 const ROLE_LABELS: Record<string, string> = {
   owner: 'Owner',
   admin: 'Admin',
+  moderator: 'Moderator',
+  attendee: 'Participant',
 };
 
-/**
- * Gatherings the signed-in viewer organizes. A server component: the session cookie is read
- * on the server and nothing about other people's memberships reaches the browser. Rendered
- * directly under the hero so an organizer finds their gatherings without scrolling the
- * marketing page; the header's "My gatherings" menu item links to `#my-gatherings`.
- */
+/** The signed-in person’s gatherings, resolved server-side from their own memberships. */
 export async function MyEventsSection() {
   const viewer = await getViewer();
   if (!viewer) return null;
 
   let events: OrganizedEvent[] = [];
+  let loadFailed = false;
   try {
-    events = await getOrganizedEvents(viewer.accountId);
+    events = await getMemberEvents(viewer.accountId);
   } catch (err) {
+    loadFailed = true;
     console.error('Error fetching my events:', err);
   }
 
@@ -34,7 +33,7 @@ export async function MyEventsSection() {
     <section id="my-gatherings" className="py-12 sm:py-16 scroll-mt-20" aria-labelledby="my-gatherings-heading">
       <div className="container mx-auto px-5">
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-          <h2 id="my-gatherings-heading" className="text-2xl sm:text-3xl font-semibold tracking-tight">My gatherings</h2>
+          <h1 id="my-gatherings-heading" className="text-4xl sm:text-5xl font-semibold tracking-tight">My gatherings</h1>
           <Button asChild>
             <Link href="/create">
               <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
@@ -43,7 +42,7 @@ export async function MyEventsSection() {
           </Button>
         </div>
 
-        {events.length > 0 ? (
+        {loadFailed ? <p role="alert" className="rounded-xl border p-5">Your gatherings could not be loaded. <a href="/" className="underline">Try again</a>.</p> : events.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {events.map((event) => {
               const badge = eventStatusBadge(event.status);
@@ -57,9 +56,9 @@ export async function MyEventsSection() {
                           <img src={event.logo_url} alt="" className="w-10 h-10 rounded-lg bg-muted object-contain" />
                         )}
                         <div className="min-w-0">
-                          <h3 className="text-2xl font-semibold tracking-tight leading-tight break-words">
-                            {event.name}
-                          </h3>
+                          <h2 className="text-2xl font-semibold tracking-tight leading-tight break-words">
+                            <Link href={`/e/${event.slug}/dashboard`} className="hover:text-primary focus-visible:underline">{event.name}</Link>
+                          </h2>
                           <span className="text-xs text-muted-foreground">{ROLE_LABELS[event.role] ?? event.role}</span>
                         </div>
                       </div>
@@ -81,7 +80,7 @@ export async function MyEventsSection() {
                       )}
                     </div>
 
-                    {!event.has_identity && (
+                    {!event.has_identity && ['owner', 'admin'].includes(event.role) && (
                       <Link
                         href={`/e/${event.slug}/admin/atproto`}
                         className="mb-4 flex items-center gap-1.5 text-xs text-signal-amber hover:underline"
@@ -91,13 +90,13 @@ export async function MyEventsSection() {
                       </Link>
                     )}
 
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <Button asChild variant="outline" size="sm" className="flex-1">
-                        <Link href={`/e/${event.slug}`}>Gathering page</Link>
+                        <Link href={`/e/${event.slug}/dashboard`}>Open gathering<ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" /></Link>
                       </Button>
-                      <Button asChild size="sm" className="flex-1">
+                      {['owner', 'admin'].includes(event.role) && <Button asChild size="sm" className="flex-1">
                         <Link href={`/e/${event.slug}/admin`}>Organizer workspace</Link>
-                      </Button>
+                      </Button>}
                     </div>
                   </CardContent>
                 </Card>
@@ -106,10 +105,10 @@ export async function MyEventsSection() {
           </div>
         ) : (
           <Card className="p-8 text-center">
-            <p className="text-muted-foreground mb-4">You haven’t created a gathering yet.</p>
+            <p className="text-muted-foreground mb-4">Your gatherings will appear here when you join or create one.</p>
             <Button asChild>
-              <Link href="/create">
-                Create a gathering
+              <Link href="/events">
+                Explore gatherings
                 <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
               </Link>
             </Button>
