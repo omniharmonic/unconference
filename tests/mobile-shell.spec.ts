@@ -10,7 +10,7 @@ import { createTestAccount, createTestGathering, type TestAccount, type TestGath
  * What is actually asserted here is the shape of the shell at the two sizes the design is drawn
  * for: a floating bar with five items and no hamburger on a phone, no bar and a two-group sidebar
  * on a laptop, a More sheet that behaves like a dialog should, a header avatar that lands on the
- * Profile tab of Account, one context row that says either where back goes or where you are, and
+ * Profile tab of Account, content without a redundant page banner, and
  * enough room under the content that the bar never covers the last thing on the page.
  *
  * The gathering, the account and the session are this suite's own and are removed in afterAll;
@@ -31,7 +31,7 @@ const isLocal = (() => {
 const PHONE = { width: 390, height: 844 }
 const LAPTOP = { width: 1280, height: 800 }
 
-test.describe('mobile shell: floating bar, More sheet, context row', () => {
+test.describe('mobile shell: floating bar, More sheet, content layout', () => {
   test.skip(!isLocal || !process.env.PDS_URL || !process.env.PDS_ADMIN_PASSWORD, 'needs the local stack: DATABASE_URL on localhost, PDS_URL, PDS_ADMIN_PASSWORD')
   test.describe.configure({ mode: 'serial' })
 
@@ -54,8 +54,7 @@ test.describe('mobile shell: floating bar, More sheet, context row', () => {
   /** Waiting for the client shell to have hydrated and drawn itself. */
   async function openWorkspace(page: Page, path: string) {
     await page.goto(path, { waitUntil: 'domcontentloaded' })
-    await expect(page.getByTestId('workspace-context')).toBeVisible()
-    // The context row is server-rendered; the account button appears only after client auth.
+    // The account button appears only after client auth.
     await expect(page.locator('button[aria-label^="Account"]').filter({ visible: true }).first()).toBeVisible({ timeout: 60_000 })
   }
 
@@ -304,7 +303,12 @@ test.describe('mobile shell: floating bar, More sheet, context row', () => {
     const { page, errors, close } = await shell(browser, PHONE)
     try {
       await openWorkspace(page, `/e/${gathering.slug}/sessions/${sessionId}`)
+      // The confirmation follows the save response, which can wait for a cold dev route.
+      const saved = page.waitForResponse((response) =>
+        response.url().endsWith(`/favorites/${sessionId}`) && response.request().method() === 'PUT',
+      { timeout: 60_000 })
       await page.getByRole('button', { name: 'Save to my schedule' }).click()
+      expect((await saved).ok()).toBe(true)
 
       const note = page.getByRole('region', { name: 'Notifications' }).getByRole('status')
       await expect(note).toContainText('Saved to my schedule')
@@ -322,23 +326,26 @@ test.describe('mobile shell: floating bar, More sheet, context row', () => {
     }
   })
 
-  // ── the context row ───────────────────────────────────────────────────────────────────────
+  // ── content starts directly below the navigation ──────────────────────────────────────────
 
-  test('the context row labels the page without duplicating bottom navigation', async ({ browser }) => {
-    const { page, close } = await shell(browser, PHONE)
-    try {
-      await openWorkspace(page, `/e/${gathering.slug}/sessions/${sessionId}`)
-      const row = page.getByTestId('workspace-context')
-      await expect(row).toContainText('Sessions')
-      await expect(row.getByRole('link')).toHaveCount(0)
-      expect((await row.boundingBox())!.height).toBeLessThanOrEqual(48)
-      await expect(page.getByRole('link', { name: 'Back to sessions' })).toHaveCount(0)
-
-      await openWorkspace(page, `/e/${gathering.slug}/my-votes`)
-      await expect(page.getByTestId('workspace-context')).toContainText('My votes')
-      await expect(page.getByTestId('workspace-context').getByRole('link', { name: 'Sessions' })).toHaveCount(0)
-    } finally {
-      await close()
+  test('attendee and organizer pages have no redundant context banner', async ({ browser }) => {
+    for (const viewport of [PHONE, LAPTOP]) {
+      const { page, close } = await shell(browser, viewport)
+      try {
+        for (const path of [`sessions/${sessionId}`, 'my-votes', 'admin', 'admin/setup']) {
+          await openWorkspace(page, `/e/${gathering.slug}/${path}`)
+          await expect(page.getByTestId('workspace-context')).toHaveCount(0)
+          await expect(page.getByRole('navigation', { name: 'Breadcrumb' })).toHaveCount(0)
+          const content = page.locator('#workspace-main > .workspace-content')
+          await expect(content).toBeVisible()
+          await expect(content.getByRole('heading').first()).toBeVisible({ timeout: 60_000 })
+          expect((await content.boundingBox())!.y).toBe(viewport === PHONE ? 64 : 0)
+          expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+          await page.screenshot({ path: `/tmp/unconference-no-banner-${path.replaceAll('/', '-')}-${viewport.width}.png` })
+        }
+      } finally {
+        await close()
+      }
     }
   })
 

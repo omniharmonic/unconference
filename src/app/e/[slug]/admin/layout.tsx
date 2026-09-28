@@ -29,7 +29,6 @@ import {
 } from 'lucide-react'
 import { useEvent, useEventRole } from '@/contexts/EventContext'
 import { NetworkMark } from '@/components/GatheringArtwork'
-import { WorkspaceHeader } from '@/components/WorkspaceHeader'
 import { AccountModalProvider, WorkspaceUserMenu } from '@/components/WorkspaceUserMenu'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -63,16 +62,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       { label: 'Network', href: `${base}/atproto`, icon: Globe, show: isAdmin || role === 'moderator' },
     ] },
   ]
-  // Routes that are not nav items but still need a breadcrumb.
-  const extraLabels: Array<{ href: string; label: string }> = [
-    { href: `${base}/sessions/new`, label: 'Add a session' },
-    { href: `${base}/sessions`, label: 'Overview & sessions' },
-  ]
   const active = (href: string) => href === base ? pathname === base || pathname?.startsWith(`${base}/sessions`) : pathname === href || pathname?.startsWith(`${href}/`)
-  const current =
-    extraLabels.find((item) => pathname === item.href || pathname?.startsWith(`${item.href}/`))?.label ||
-    groups.flatMap((g) => g.items).find((item) => active(item.href))?.label ||
-    'Organizer workspace'
   React.useEffect(() => { setOpen(false) }, [pathname])
   React.useEffect(() => {
     const close = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
@@ -129,12 +119,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </div>}
     </div>
     <main id="workspace-main" tabIndex={-1} className="flex-1 min-w-0 md:ml-[240px] lg:ml-[260px] min-h-screen pt-16 md:pt-0">
-      <WorkspaceHeader label={current}/>
-      <nav aria-label="Breadcrumb" className="md:hidden flex items-center gap-2 border-b bg-card/70 px-5 py-2.5 text-sm">
-        <span className="truncate text-muted-foreground">Organizer workspace</span>
-        <span className="text-border" aria-hidden="true">/</span>
-        <span className="truncate font-medium" aria-current="page">{current}</span>
-      </nav>
       <div className="workspace-content">{children}</div>
     </main>
     <Toaster />

@@ -70,7 +70,6 @@
     --favorite: 32 85% 33%;
     --favorite-foreground: 0 0% 100%;
     --radius: 0.75rem;
-    --workspace-header-h: 76px;
     /* The floating mobile utility bar (MobileTabBar): its own height, and the gap it is inset by. */
     --mobile-bar-h: 58px;
     --mobile-bar-inset: 12px;
@@ -189,7 +188,7 @@
   .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
   .scrollbar-hide::-webkit-scrollbar { display: none; }
   .page-transition { @apply transition-colors duration-200; }
-  .sticky-under-header { position: sticky; top: var(--workspace-header-h); }
+  .sticky-under-header { @apply sticky top-16 md:top-0; }
   .text-favorite { color: hsl(var(--favorite)); }
   .bg-favorite { background-color: hsl(var(--favorite)); }
   .border-favorite { border-color: hsl(var(--favorite)); }

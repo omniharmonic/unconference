@@ -109,7 +109,7 @@ export default async function EventPage({ params, searchParams }: { params: Prom
     }
   }
 
-  // Same labels as the workspace sidebar (DashboardLayout.getNavItems) for the same destinations.
+  // Same labels as the workspace sidebar (DashboardLayout.getNavGroups) for the same destinations.
   const quickActions = [
     proposing
       ? { href: `/e/${event.slug}/propose`, icon: FileText, label: 'Propose a session' }

@@ -4,7 +4,6 @@ import { EventLogo } from '@/components/EventLogo'
 
 import { isParticipationOpen } from '@/lib/events/lifecycle'
 import * as React from 'react'
-import { WorkspaceHeader } from '@/components/WorkspaceHeader'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
@@ -65,35 +64,6 @@ export function getNavGroups(eventSlug: string, opts: { hasKnowledge?: boolean }
       ...(opts.hasKnowledge ? [{ href: `/e/${eventSlug}/ask`, label: 'Ask', icon: MessageCircleQuestion }] : []),
     ],
   ]
-}
-
-/** Flat nav list, for label lookups and anything that does not care about the grouping. */
-export function getNavItems(eventSlug: string, opts: { hasKnowledge?: boolean } = {}) {
-  return getNavGroups(eventSlug, opts).flat()
-}
-
-/**
- * Route → breadcrumb label for pages inside the workspace that are not nav items.
- * Longest suffix first so `/settings/notifications` wins over `/settings`.
- */
-const ROUTE_LABELS: ReadonlyArray<readonly [suffix: string, label: string]> = [
-  ['/settings/notifications', 'Notification preferences'],
-  ['/notifications', 'Notifications'],
-  ['/settings', 'Settings'],
-  ['/propose', 'Propose a session'],
-  ['/tickets', 'Tickets'],
-  ['/checkin', 'Check-in'],
-  ['/ask', 'Ask the gathering'],
-  ['/admin', 'Organizer workspace'],
-]
-
-export function workspaceLabel(pathname: string | null, eventSlug: string): string {
-  if (!pathname) return 'Your gathering'
-  const nav = getNavItems(eventSlug).find((item) => pathname === item.href || pathname.startsWith(`${item.href}/`))
-  if (nav) return nav.label
-  const base = `/e/${eventSlug}`
-  const hit = ROUTE_LABELS.find(([suffix]) => pathname === `${base}${suffix}` || pathname.startsWith(`${base}${suffix}/`))
-  return hit?.[1] ?? 'Your gathering'
 }
 
 // ============================================================================
@@ -252,7 +222,6 @@ function DashboardShell({ children }: DashboardLayoutProps) {
         {/* Mobile spacer for fixed header */}
         <div className="h-16 md:hidden" />
 
-        <WorkspaceHeader label={workspaceLabel(pathname, event.slug)} />
         <div className="workspace-content">
           {children}
         </div>
