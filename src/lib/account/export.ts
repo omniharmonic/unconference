@@ -40,6 +40,7 @@ export interface AccountExport {
   notification_preferences: Record<string, unknown>[]
   assistant_tokens: Record<string, unknown>[]
   calendar_feeds: Record<string, unknown>[]
+  telegram_connections: Record<string, unknown>[]
   reports_filed: Record<string, unknown>[]
 }
 
@@ -70,7 +71,7 @@ export async function buildAccountExport(accountId: string): Promise<AccountExpo
 
   const [
     memberships, proposals, cohosting, rsvps, favorites, tickets,
-    transcripts, resources, notifications, preferences, tokens, feeds, reports,
+    transcripts, resources, notifications, preferences, tokens, feeds, reports, telegram,
   ] = await Promise.all([
     sql<Record<string, unknown>[]>`
       select e.slug as gathering, e.name as gathering_name, m.role, m.joined_at, m.vote_credits,
@@ -125,6 +126,9 @@ export async function buildAccountExport(accountId: string): Promise<AccountExpo
       select e.slug as gathering, r.subject_kind, r.reason, r.status, r.created_at, r.resolved_at
       from moderation_reports r join events e on e.id = r.event_id
       where r.reporter_account_id = ${accountId} order by r.created_at desc`,
+    sql<Record<string, unknown>[]>`select e.slug as gathering, b.username as bot, l.telegram_user_id, l.linked_at
+      from telegram_links l join events e on e.id=l.event_id join telegram_bots b on b.event_id=l.event_id
+      where l.account_id=${accountId}`,
   ])
 
   return {
@@ -162,5 +166,6 @@ export async function buildAccountExport(accountId: string): Promise<AccountExpo
     assistant_tokens: tokens,
     calendar_feeds: feeds,
     reports_filed: reports,
+    telegram_connections: telegram,
   }
 }

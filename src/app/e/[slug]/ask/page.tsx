@@ -16,6 +16,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { DashboardLayout } from '@/components/DashboardLayout'
 import { PageHeader } from '@/components/PageHeader'
 import { AskPanel, type AskTheme } from '@/components/knowledge/AskPanel'
+import { TelegramConnectionCard } from '@/components/knowledge/TelegramConnectionCard'
 import { AssistantCard } from '@/components/knowledge/AssistantCard'
 import { useAuth } from '@/hooks/useAuth'
 import { useEvent, useEventRole, JoinGatheringButton } from '@/contexts/EventContext'
@@ -89,6 +90,7 @@ export default function AskPage() {
               </CardHeader>
             </Card>
           )}
+          <TelegramConnectionCard slug={event.slug} />
           <AssistantCard gatheringName={event.name} />
         </div>
       )}

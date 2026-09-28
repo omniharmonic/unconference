@@ -24,6 +24,7 @@ import { FeedNetworkSection } from './_components/FeedNetworkSection'
 import { LifecycleSection } from './_components/LifecycleSection'
 import { CloneSection } from './_components/CloneSection'
 import { DangerZone } from './_components/DangerZone'
+import { TelegramBotSection } from './_components/TelegramBotSection'
 import { SETTINGS_SECTIONS } from './_components/labels'
 
 /**
@@ -65,6 +66,11 @@ export default function EventSettingsPage() {
   React.useEffect(() => { setStatus(event.status) }, [event.status])
   const allowed = Boolean(user) && can('editEventSettings')
   const active = useScrollSpy(allowed && !isLoading && !authLoading ? SECTION_IDS : NO_SECTIONS)
+  React.useEffect(() => {
+    if (!allowed || isLoading || authLoading) return
+    const id = window.location.hash.slice(1)
+    if (SECTION_IDS.includes(id)) document.getElementById(id)?.scrollIntoView({ block: 'start' })
+  }, [allowed, isLoading, authLoading])
 
   if (isLoading || authLoading) {
     return <div className="flex justify-center py-20" role="status" aria-label="Loading settings"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
@@ -107,6 +113,7 @@ export default function EventSettingsPage() {
     <BrandingSection event={event} />
     <ImagesSection event={event} />
     <React.Suspense fallback={null}><FeedNetworkSection event={event} network={network} /></React.Suspense>
+    <TelegramBotSection slug={event.slug} />
     <LifecycleSection event={event} status={status} onChanged={setStatus} hasIdentity={Boolean(network?.did)} />
     <CloneSection event={event} />
     {isOwner ? <div className="border-t pt-8"><DangerZone event={event} status={status} published={Boolean(network?.publishedAt)} /></div> : null}

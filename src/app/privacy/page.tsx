@@ -108,8 +108,14 @@ export default function PrivacyPage() {
               <li>Notifications are deleted after 90 days.</li>
               <li>Who invited whom is forgotten 30 days after an invitation is used.</li>
               <li>Check-in times for past gatherings are reduced to counts after 90 days.</li>
-              <li>Sign-in links expire after 15 minutes; sessions expire after 30 days.</li>
+              <li>Sign-in links expire after 15 minutes; web sessions last 90 days and renew during active use. Signing out revokes the session.</li>
             </ul>
+          </Section>
+
+          <Section title="Optional Telegram assistants">
+            <p>Organizers can connect a Telegram bot to mirror public announcements and answer event questions using their chosen AI provider. Questions and relevant event information are sent to that provider. Replies are also sent through Telegram.</p>
+            <p>Linking your Telegram account is optional and does not publish that identity to AT Protocol. Transcript answers are sent privately, only to linked current members, using member-visible transcripts. The bot does not retain ordinary group conversations or chat history.</p>
+            <p>Pending questions and answers are encrypted in our database, cleared after delivery or terminal failure, and purged within 24 hours. Telegram retains delivered messages under its own policies. You can disconnect in Account → Connections within a gathering, or send /unlink privately to the bot.</p>
           </Section>
 
           <Section title="Cookies and tracking">

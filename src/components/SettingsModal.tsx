@@ -46,6 +46,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { apiFetch, ApiError } from '@/lib/api/client'
 import { HELP_PRIVACY, LEARN_MORE } from '@/lib/labels'
 import { cn } from '@/lib/utils'
+import { TelegramConnectionCard } from '@/components/knowledge/TelegramConnectionCard'
 import { CalendarSubscriptions } from '@/components/CalendarSubscriptions'
 import { uploadAvatar } from '@/lib/storage/upload'
 
@@ -885,6 +886,7 @@ export function AccountPanel({ gathering, onDirtyChange, onCancel, active = true
       <div id={`${tabId}-panel-connections`} role="tabpanel" aria-labelledby={`${tabId}-tab-connections`} hidden={tab !== 'connections'} className="min-w-0 space-y-6">
         <CalendarSubscriptions active={active && tab === 'connections'} />
         <AssistantConnections active={active && tab === 'connections'} />
+        {eventSlug && active && tab === 'connections' && <TelegramConnectionCard slug={eventSlug} />}
       </div>
 
       {/* ── Preferences ── */}

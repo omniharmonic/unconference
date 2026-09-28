@@ -179,6 +179,7 @@ services:
         while true; do
           job /api/jobs/close-rounds
           job /api/jobs/publish
+          job /api/jobs/telegram
           [ $$((n % 5)) -eq 0 ] && job /api/jobs/lifecycle
           [ $$((n % 5)) -eq 0 ] && job /api/notifications/dispatch
           [ $$((n % 60)) -eq 0 ] && job /api/atproto/sync

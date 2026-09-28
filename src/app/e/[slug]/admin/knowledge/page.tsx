@@ -87,7 +87,7 @@ function AiAccessCard({ eventName, eventSlug }: { eventName: string; eventSlug: 
   const snippet = [
     `You can point your own AI assistant at ${eventName}.`,
     '',
-    `1. Open ${origin}/account?tab=identity and create a token under “Connect an AI assistant”.`,
+    `1. Open ${origin}/account?tab=connections and create a token under “Connect an AI assistant”.`,
     `2. Add this MCP server to Claude, ChatGPT or Cursor: ${mcpUrl}`,
     '3. Use the token as the bearer token.',
     '',
@@ -335,6 +335,7 @@ export default function AdminKnowledgePage() {
               <div className="border-t pt-4">
                 <p className="mb-3 text-sm font-medium">This gathering’s answer key</p>
                 <AiKeyForm eventSlug={event.slug} onChanged={() => void load()} />
+                <p className="mt-4 text-sm text-muted-foreground">Use this same key for an event guide in your group chat. <Link href={`/e/${event.slug}/admin/settings#telegram`} className="underline">Set up Telegram</Link>.</p>
               </div>
             ) : (
               <p className="border-t pt-4 text-xs text-muted-foreground">Only the owner and admins can set the gathering’s answer key.</p>

@@ -25,6 +25,7 @@ The organizer workspace shows the current phase, relevant deadlines, and the nex
 - **Organizer tools:** event settings, branded navigation and banners, bulk slot creation, venues, tracks, schedule builder, moderation, and member roles.
 - **Tickets:** free passes and a Stripe Connect integration for paid admission, refunds, and participation gating. Organizers choose a platform contribution from **1% to 50%**. Owner/admin voting does not require a ticket; normal voting windows and credit limits still apply.
 - **During and after the gathering:** personal schedules, calendar feeds, maps, session resources, member-only transcripts, and knowledge search. AI answers require an explicitly configured provider.
+- **Telegram:** optional per-gathering announcement bots and event guides using the organizer’s AI key. Transcript answers stay private to linked members; participant-owned assistants still use MCP. See [Telegram setup and privacy](docs/TELEGRAM.md).
 - **Mobile and PWA:** responsive layouts, installable app icons, an offline fallback, and opt-in Web Push with per-category preferences.
 
 Paid sales require a configured Stripe platform, signed webhooks, and an eligible connected organizer account. See [Stripe activation and verification](docs/STRIPE_ACTIVATION.md); an implemented checkout flow is not evidence that a deployment is ready to accept live payments.

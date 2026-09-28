@@ -13,6 +13,7 @@ export const SETTINGS_SECTIONS = [
   { id: 'safeguards', label: 'Safeguards' },
   { id: 'branding', label: 'Branding' },
   { id: 'feed-network', label: 'Feed & network' },
+  { id: 'telegram', label: 'Telegram' },
   { id: 'lifecycle', label: 'Lifecycle' },
   { id: 'clone', label: 'Copy' },
 ] as const

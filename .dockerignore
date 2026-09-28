@@ -11,6 +11,7 @@ screenshots
 supabase/.temp
 deploy/local/pds.env
 deploy/unconference/.env
+deploy/unconference/.env.*
 deploy/unconference/backups
 .playwright-mcp
 *.log
