@@ -6,18 +6,15 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Loader2, AlertCircle, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { SiteHeader } from '@/components/SiteHeader';
-import { Footer } from '@/components/Footer';
-import { PageHeader } from '@/components/PageHeader';
 import { ELLIPSIS } from '@/lib/format';
 import { validateWizardState } from '@/lib/events/validate-creation';
 import { useAuth } from '@/hooks/useAuth';
 
 import { useWizardStateWithPersistence } from './useWizardPersistence';
-import { WizardStepTabs, WizardNavButtons, WizardValidationErrors, getMaxNavigableStep } from './WizardNavigation';
+import { WizardStepTabs, WizardNavButtons, WizardValidationErrors } from './WizardNavigation';
 import {
   getStepFromNumber,
   getNumberFromStep,
@@ -35,7 +32,7 @@ import TracksStep from './steps/TracksStep';
 import ParticipationStep from './steps/ParticipationStep';
 import VotingStep from './steps/VotingStep';
 import BrandingStep from './steps/BrandingStep';
-import ReviewStep from './steps/ReviewStep';
+import ReviewStep, { creationReadiness } from './steps/ReviewStep';
 
 // ============================================================================
 // Step Props Interface
@@ -106,6 +103,8 @@ function CreateWizardContent() {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [submitError, setSubmitError] = React.useState<string | null>(null);
   const [slugSuggestions, setSlugSuggestions] = React.useState<string[]>([]);
+  const [hasAdvanced, setHasAdvanced] = React.useState(false);
+  const stepContent = React.useRef<HTMLDivElement>(null);
 
   // Redirect to login if not authenticated
   React.useEffect(() => {
@@ -136,15 +135,16 @@ function CreateWizardContent() {
   // Handle start fresh
   const handleStartFresh = React.useCallback(() => {
     clearDraft(true);
+    setHasAdvanced(false);
     setShowResumeDialog(false);
   }, [clearDraft]);
 
-  // Scroll to top whenever the step changes so the new step loads at the top
-  // of the viewport (fixes the review page opening scrolled to the bottom).
+  // The controls stay mounted; only the form changes. Return the viewport and keyboard focus
+  // to the new step, rather than leaving a short step scrolled beneath the navigation bar.
   React.useEffect(() => {
-    if (typeof window !== 'undefined') {
-      window.scrollTo({ top: 0, behavior: 'auto' });
-    }
+    if (state.currentStep > 0) setHasAdvanced(true);
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    stepContent.current?.focus({ preventScroll: true });
   }, [state.currentStep]);
 
   // Handler for event submission
@@ -256,8 +256,6 @@ function CreateWizardContent() {
           <ReviewStep
             state={state}
             dispatch={dispatch}
-            onSubmit={handleSubmit}
-            isSubmitting={isSubmitting}
           />
         );
       default:
@@ -281,28 +279,36 @@ function CreateWizardContent() {
 
   const datesStep = getNumberFromStep('dates');
   const reviewStep = getNumberFromStep('review');
-  const canSkipToReview = getMaxNavigableStep(state) >= reviewStep;
+  const ready = creationReadiness(state);
+  const canSkipToReview = ready.ok;
   const draftSavedLabel = lastSavedAt
-    ? `Draft saved on this device at ${new Intl.DateTimeFormat('en-US', { timeStyle: 'short' }).format(lastSavedAt)}`
-    : null;
+    ? `Saved on this device · ${new Intl.DateTimeFormat('en-US', { timeStyle: 'short' }).format(lastSavedAt)}`
+    : 'Your draft stays on this device';
+  const canCreate = ready.ok && state.identity.termsAccepted && !isSubmitting;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <SiteHeader />
 
-      {/* Main Content */}
-      <main className="container mx-auto px-5 py-8 flex-1">
-        <div className="max-w-5xl mx-auto space-y-8">
-          <PageHeader
-            eyebrow="Create a gathering"
-            title="Make room for your people."
-            subtitle="Start with the essentials. Add the spaces, topics, and small details that make this gathering yours."
-            actions={draftSavedLabel ? <p className="text-sm text-muted-foreground" aria-live="polite">{draftSavedLabel}</p> : undefined}
-            className="mb-0"
-          />
+      <main className="container mx-auto flex-1 px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-5 sm:px-5 sm:pt-8">
+        <h1 className="sr-only">Create a gathering</h1>
+        <div className="mx-auto max-w-5xl space-y-5">
+          {state.currentStep === 0 && !hasAdvanced && (
+            <div data-testid="wizard-intro" className="max-w-2xl space-y-2 pb-1">
+              <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">Make room for your people.</h2>
+              <p className="text-sm leading-relaxed text-muted-foreground sm:text-base">Name it, set the dates, and make it yours. You can leave the finer details for later.</p>
+            </div>
+          )}
 
-          {/* Wizard Content */}
-          <div className="space-y-6">
+          <div data-testid="wizard-progress" className="sticky top-[77px] z-30 -mx-1 rounded-2xl border bg-background/95 px-3 pb-3 pt-1 backdrop-blur-md sm:mx-0 sm:px-4 sm:py-2">
+            <WizardStepTabs state={state} dispatch={dispatch} disabled={isSubmitting} />
+          </div>
+
+          <div className={`mx-auto space-y-4 ${getStepFromNumber(state.currentStep) === 'schedule' ? 'max-w-5xl' : 'max-w-3xl'}`}>
+            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-xs text-muted-foreground">
+              <span>{state.currentStep < 3 ? 'The essentials' : state.currentStep < reviewStep ? 'Make it yours · adjustable later' : 'One last look'}</span>
+              <span title={draftSavedLabel}>{lastSavedAt ? 'Draft saved on this device' : 'Draft saves on this device'}</span>
+            </div>
             {/* Error Alert */}
             {submitError && (
               <Alert id="create-submit-error" variant="destructive">
@@ -339,49 +345,54 @@ function CreateWizardContent() {
               </Alert>
             )}
 
-            {/* Step tabs and the current step's validation errors */}
-            <Card>
-              <CardContent className="py-4 space-y-4">
-                <WizardStepTabs state={state} dispatch={dispatch} />
-                <WizardValidationErrors state={state} />
-              </CardContent>
-            </Card>
+            <WizardValidationErrors state={state} />
+
+            {state.currentStep > datesStep && state.currentStep < reviewStep && canSkipToReview && (
+              <div className="flex items-center justify-between gap-3 rounded-xl bg-secondary/60 px-4 py-2">
+                <p className="text-sm">Your essentials are ready.</p>
+                <Button type="button" variant="ghost" size="sm" disabled={isSubmitting} className="min-h-11 shrink-0" onClick={() => dispatch({ type: 'SET_STEP', payload: reviewStep })}>
+                  Review now
+                </Button>
+              </div>
+            )}
 
             {/* Step Content */}
-            <div className="min-h-[400px] space-y-6">
-              {renderStep()}
-              {state.currentStep === datesStep && (
-                <div className="rounded-xl border bg-secondary/40 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div>
-                    <h2 className="font-semibold">Start simple.</h2>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      Use the defaults for now. Add rooms, time slots and program details from your organizer workspace.
-                    </p>
-                    {!canSkipToReview && (
-                      <p className="mt-1 text-xs text-muted-foreground">Choose your dates first, then you can skip straight to the review.</p>
-                    )}
+            <div ref={stepContent} tabIndex={-1} role="region" data-testid="wizard-step-content" aria-label={`${getStepFromNumber(state.currentStep)} setup`} className="space-y-4 focus-visible:ring-0">
+              <fieldset disabled={isSubmitting} className="min-w-0 space-y-4">
+                {renderStep()}
+                {state.currentStep === datesStep && (
+                  <div className="rounded-xl border bg-secondary/40 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <h2 className="font-semibold">That’s enough to get started.</h2>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        Review now, or keep going to customize your program. Rooms, voting and branding can all be adjusted later.
+                      </p>
+                      {!canSkipToReview && (
+                        <p className="mt-1 text-xs text-muted-foreground">Choose your dates first, then you can skip straight to the review.</p>
+                      )}
+                    </div>
+                    <Button
+                      className="min-h-11 shrink-0"
+                      variant="outline"
+                      disabled={!canSkipToReview}
+                      onClick={() => dispatch({ type: 'SET_STEP', payload: reviewStep })}
+                    >
+                      Review with defaults
+                    </Button>
                   </div>
-                  <Button
-                    disabled={!canSkipToReview}
-                    onClick={() => dispatch({ type: 'SET_STEP', payload: reviewStep })}
-                  >
-                    Continue with defaults
-                  </Button>
-                </div>
-              )}
+                )}
+              </fieldset>
             </div>
 
-            {/* The one sticky navigation bar: Back on every step after the first, Continue until Review. */}
-            <Card className="sticky bottom-3 z-10 shadow-lg">
-              <CardContent className="py-4">
-                <WizardNavButtons state={state} dispatch={dispatch} />
-              </CardContent>
-            </Card>
           </div>
         </div>
       </main>
 
-      <Footer variant="minimal" />
+      <div data-testid="wizard-actions" className="fixed inset-x-0 bottom-0 z-40 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 sm:px-5">
+        <div className="mx-auto max-w-3xl rounded-2xl border bg-background/95 p-3 shadow-lg backdrop-blur-md">
+          <WizardNavButtons state={state} dispatch={dispatch} disabled={isSubmitting} onSubmit={handleSubmit} canCreate={canCreate} />
+        </div>
+      </div>
 
       {/* Resume Draft Dialog */}
       <ResumeDraftDialog

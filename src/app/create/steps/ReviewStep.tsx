@@ -23,7 +23,7 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { validateWizardState } from '@/lib/events/validate-creation';
-import { plural, truncate, formatDateRange, ELLIPSIS } from '@/lib/format';
+import { plural, truncate, formatDateRange } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { VOTING_MECHANISMS, THEME_MODES, socialToList } from '@/app/e/[slug]/admin/settings/_components/constants';
 import { EVENT_TYPES, VISIBILITY_OPTIONS } from './BasicsStep';
@@ -48,8 +48,6 @@ import {
 interface ReviewStepProps {
   state: WizardState;
   dispatch: React.Dispatch<WizardAction>;
-  onSubmit: () => Promise<void>;
-  isSubmitting: boolean;
 }
 
 interface SectionProps {
@@ -131,7 +129,7 @@ function ChipList({ items }: { items: string[] }) {
 }
 
 /** The one thing that still blocks creation, with a link to the step that fixes it. */
-function readiness(state: WizardState): { ok: true } | { ok: false; error: string; step: number } {
+export function creationReadiness(state: WizardState): { ok: true } | { ok: false; error: string; step: number } {
   const validation = validateWizardState(state);
   if (!validation.valid) {
     return { ok: false, error: validation.error || 'Review the gathering’s details.', step: stepForValidationArea(validation.step, validation.error) };
@@ -143,7 +141,7 @@ function readiness(state: WizardState): { ok: true } | { ok: false; error: strin
 }
 
 function ValidationSummary({ state, onEdit }: { state: WizardState; onEdit: (step: number) => void }) {
-  const ready = readiness(state);
+  const ready = creationReadiness(state);
 
   if (ready.ok) {
     return (
@@ -173,7 +171,7 @@ function ValidationSummary({ state, onEdit }: { state: WizardState; onEdit: (ste
 // Main Component
 // ============================================================================
 
-export function ReviewStep({ state, dispatch, onSubmit, isSubmitting }: ReviewStepProps) {
+export function ReviewStep({ state, dispatch }: ReviewStepProps) {
   const { basics, dates, venues, schedule, tracks, voting, branding, identity } = state;
   const termsAccepted = identity.termsAccepted;
 
@@ -182,14 +180,7 @@ export function ReviewStep({ state, dispatch, onSubmit, isSubmitting }: ReviewSt
     [dispatch]
   );
 
-  const ready = readiness(state);
-  const canCreate = ready.ok && termsAccepted && !isSubmitting;
-
-  const handleSubmit = async () => {
-    if (!canCreate) return;
-    await onSubmit();
-  };
-
+  const ready = creationReadiness(state);
   const scheduleDays = new Set(schedule.timeSlots.map((slot) => slot.dayDate)).size;
   const links = socialToList(branding.social);
   const showLocation = dates.locationType !== 'virtual';
@@ -403,7 +394,7 @@ export function ReviewStep({ state, dispatch, onSubmit, isSubmitting }: ReviewSt
       </Section>
 
       {/* Terms */}
-      <Card>
+      <Card id="wizard-consent" className="scroll-mt-52">
         <CardContent className="py-4">
           <div className="flex items-start gap-3">
             <Checkbox
@@ -426,9 +417,6 @@ export function ReviewStep({ state, dispatch, onSubmit, isSubmitting }: ReviewSt
       </Card>
 
       <div className="pt-2 space-y-2">
-        <Button size="lg" className="w-full" onClick={handleSubmit} loading={isSubmitting} disabled={!canCreate}>
-          {isSubmitting ? `Creating the gathering${ELLIPSIS}` : 'Create a gathering'}
-        </Button>
         {!ready.ok ? (
           <p className="text-sm text-muted-foreground text-center">
             {ready.error}{' '}
