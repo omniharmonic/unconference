@@ -15,6 +15,8 @@ export * from './policy'
 
 /** An `events` row plus the gathering-identity columns the shared `EventRow` type predates. */
 export type EventRecord = EventRow & {
+  feed_posts: boolean
+  feed_digest_threshold: number
   actor_did: string | null
   actor_handle: string | null
   gathering_uri: string | null

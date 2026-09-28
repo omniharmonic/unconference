@@ -106,6 +106,12 @@ Account keeps **Profile** and **Identity** separate from **Connections** (person
 
 On Schedule, **Export** downloads the selected view as a snapshot. **Subscribe** creates a private calendar feed of your saved sessions across gatherings, including future updates. Open it in a calendar app or copy its address into a calendar subscription; refresh timing depends on the calendar app. The address is shown once and can be revoked from Connections.
 
+### Bluesky event updates
+
+Each gathering has its own Bluesky profile, using its name, description and uploaded logo. For a public gathering, organizers can enable **Settings → Feed & network → Post activity to the gathering’s feed** (off by default). Enabling it refreshes the profile; future publication, proposal/voting openings, schedule releases, and published session changes create linked posts. Earlier phase changes are not replayed. Large schedule additions become a digest, and session times include the event’s time zone.
+
+Visitors can use **Follow on Bluesky** on the gathering page, then follow the profile and enable its bell for activity notifications. Delivery is managed by Bluesky and the follower’s notification settings. Organizers can inspect delivery and retry failures on **Feed & network**. Private/draft gatherings never post; host mentions require the host’s explicit per-gathering consent, and posts exclude vote counts and attendee-only details.
+
 ## Verification
 
 With the local stack running and `.env.local` configured:

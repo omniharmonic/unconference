@@ -307,7 +307,8 @@ export async function enqueueGatheringPost(input: { eventId: string; kind: Gathe
 }
 
 /**
- * Claim session posts (one per event, kind and session). For `session-scheduled`, more newly
+ * Claim first-scheduled posts once per session, and changes once per published slot revision.
+ * Repeated move/cancel callbacks for the same revision do not post twice. For `session-scheduled`, more newly
  * claimed sessions than `feed_digest_threshold` in one call become a single digest post.
  */
 export async function enqueueSessionPosts(input: { eventId: string; kind: SessionFeedKind; sessionIds: readonly string[]; callerUserId: string | null }): Promise<EnqueueResult> {
@@ -319,7 +320,10 @@ export async function enqueueSessionPosts(input: { eventId: string; kind: Sessio
   // Only sessions of THIS event, never a foreign id smuggled in.
   const inserted = await sql<{ id: string }[]>`
     insert into feed_posts (event_id, kind, subject_id, subject_key, requested_by)
-    select s.event_id, ${input.kind}, s.id, s.id::text, ${input.callerUserId}
+    select s.event_id, ${input.kind}, s.id,
+      case when ${input.kind} = 'session-scheduled' then s.id::text
+           else s.id::text || ':' || coalesce(s.slot_cid, 'unpublished') end,
+      ${input.callerUserId}
     from sessions s
     where s.event_id = ${input.eventId} and s.id = any(${ids}::uuid[])
       -- The gathering does not announce a session it has hidden (migration 0033).
@@ -377,11 +381,11 @@ function dateOnly(v: string | Date): string {
   return v instanceof Date ? v.toISOString().slice(0, 10) : String(v).slice(0, 10)
 }
 
-/** "Sat, Oct 3, 9:00 AM" in the gathering's timezone. */
+/** Include the zone: followers may be reading from anywhere in the world. */
 export function formatWhen(at: Date | string, timezone: string): string {
   const d = typeof at === 'string' ? new Date(at) : at
   try {
-    return new Intl.DateTimeFormat('en-US', { timeZone: timezone, weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(d)
+    return new Intl.DateTimeFormat('en-US', { timeZone: timezone, timeZoneName: 'short', weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(d)
   } catch {
     return d.toISOString()
   }
@@ -422,7 +426,7 @@ async function compose(event: EventGate, row: FeedRow): Promise<Omit<BuildPostIn
     case 'gathering-published':
       return { template: `{title} — ${when}${place}. {link}`, title: event.name, url: base, card: gatheringCard, sessionId: null }
     case 'proposals-open':
-      return { template: `Proposals are open for {title}: pitch a session. {link}`, title: event.name, url: `${base}/sessions/new`, card: { ...gatheringCard, description: 'Proposals are open.' }, sessionId: null }
+      return { template: `Proposals are open for {title}: pitch a session. {link}`, title: event.name, url: `${base}/propose`, card: { ...gatheringCard, description: 'Proposals are open. Share an idea and help shape the gathering.' }, sessionId: null }
     case 'voting-open':
       return { template: `Voting is open for {title}. {link}`, title: event.name, url: `${base}/sessions`, card: { ...gatheringCard, description: 'Voting is open.' }, sessionId: null }
     case 'schedule-published': {

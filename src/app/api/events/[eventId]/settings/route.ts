@@ -459,7 +459,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ ev
     const alreadyPublished = Boolean(saved.atproto_published_at)
     const gatheringChanged = GATHERING_KEYS.some((key) => key in update)
     const policyChanged = POLICY_KEYS.some((key) => key in update)
-    if (leavingDraft || (alreadyPublished && gatheringChanged)) {
+    // Older gatherings may have public records but no Bluesky profile yet. Enabling their
+    // feed also refreshes the name/logo so followers do not land on an empty identity.
+    const enablingPublicFeed = update.feed_posts === true && !current.feed_posts && saved.visibility === 'public' && saved.status !== 'draft'
+    if (leavingDraft || enablingPublicFeed || (alreadyPublished && gatheringChanged)) {
       network.push(await publishGatheringRecords(saved.id, viewer.accountId))
     } else if (alreadyPublished && policyChanged) {
       network.push(await publishPolicyRecord(saved.id, viewer.accountId))

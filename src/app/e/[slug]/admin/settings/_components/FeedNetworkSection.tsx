@@ -115,7 +115,7 @@ export function FeedNetworkSection({ event, network }: { event: Event; network: 
       </div>
       <div className="flex flex-wrap gap-3">
         <Button asChild variant="outline"><Link href={`/e/${event.slug}/admin/atproto`}>Open Feed & network page</Link></Button>
-        {network?.publishedAt && profileUrl ? <Button asChild variant="outline"><a href={profileUrl} target="_blank" rel="noopener noreferrer">View on the network<ExternalLink className="ml-2 h-3.5 w-3.5" aria-hidden="true" /></a></Button> : null}
+        {network?.publishedAt && profileUrl ? <Button asChild variant="outline"><a href={profileUrl} target="_blank" rel="noopener noreferrer">View Bluesky profile<ExternalLink className="ml-2 h-3.5 w-3.5" aria-hidden="true" /></a></Button> : null}
         {recordUrl ? <Button asChild variant="ghost"><a href={recordUrl} target="_blank" rel="noopener noreferrer">Inspect the record<ExternalLink className="ml-2 h-3.5 w-3.5" aria-hidden="true" /></a></Button> : null}
       </div>
     </div>}
@@ -126,6 +126,7 @@ export function FeedNetworkSection({ event, network }: { event: Event; network: 
         <div className="space-y-1">
           <p className="text-sm font-medium">Feed</p>
           <p className="text-sm text-muted-foreground">When on, the gathering’s account posts about its own activity so anyone on Bluesky can follow it. Off by default. Posts are written by the gathering, never by an organizer’s account, and every one is in the audit trail.</p>
+          <p className="text-sm text-muted-foreground">Followers can turn on the bell on its Bluesky profile for activity notifications. Enabling this refreshes the profile and posts future activity; it does not replay earlier phase changes.</p>
         </div>
       </div>
       {feedError ? <p className="text-sm text-destructive" role="alert">{feedError}</p> : null}

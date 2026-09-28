@@ -145,7 +145,7 @@ export default async function EventPage({ params, searchParams }: { params: Prom
                   <span className="flex flex-wrap items-center gap-2">
                     <Globe className="h-4 w-4" aria-hidden="true" />
                     <span className="font-mono text-xs">@{network.handle}</span>
-                    {links.profile && <a href={links.profile} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">View on the network</a>}
+                    {links.profile && <a href={links.profile} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Follow on Bluesky</a>}
                     {links.record && <a href={links.record} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Public record</a>}
                   </span>
                 )}

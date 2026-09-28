@@ -216,9 +216,22 @@ test.describe('gathering feed', () => {
     expect(status.body.blocked).toMatch(/off/)
   })
 
+  test('publishing the gathering creates a readable Bluesky profile even with posting off', async () => {
+    const result = await api<{ results: Array<{ kind: string; uri?: string; error?: string }> }>(owner, 'POST', `/api/v1/events/${gathering.slug}/admin/atproto/publish`, { what: 'gathering' })
+    expect(result.status).toBe(200)
+    expect(result.body.results.filter(r => r.error)).toEqual([])
+    const profile = result.body.results.find(r => r.kind === 'profile')
+    expect(profile?.uri).toBe(`at://${gathering.actorDid}/app.bsky.actor.profile/self`)
+    const live = await getRecordLive(profile!.uri!)
+    expect(live.status).toBe(200)
+    expect(live.value).toMatchObject({ $type: 'app.bsky.actor.profile', displayName: expect.stringContaining('Test Gathering') })
+    expect(await ledger()).toEqual([])
+  })
+
   test('policy on, host without consent: the post says "the host", carries no mention facet, and validates', async () => {
-    const on = await api(owner, 'PATCH', `/api/events/${gathering.id}/settings`, { feed_posts: true })
+    const on = await api<{ network: Array<{ ok: boolean; written: string[] }> }>(owner, 'PATCH', `/api/events/${gathering.id}/settings`, { feed_posts: true })
     expect(on.status, JSON.stringify(on.body)).toBe(200)
+    expect(on.body.network).toEqual(expect.arrayContaining([expect.objectContaining({ ok: true, written: expect.arrayContaining([`at://${gathering.actorDid}/app.bsky.actor.profile/self`]) })]))
     const sessionId = await newSession(`Feed no consent ${RUN}`, host.id)
     await publishSchedule()
     const [claimed] = await ledger(sessionId)
@@ -369,6 +382,53 @@ test.describe('gathering feed', () => {
       await new Promise((r) => setTimeout(r, 1000))
     }
     expect((await ledger()).filter((r) => r.kind === 'schedule-digest')).toHaveLength(before + 1)
+  })
+
+  test('proposal announcements link to the working proposal page and session times include the zone', async () => {
+    await feed.enqueueGatheringPost({ eventId: gathering.id, kind: 'proposals-open', callerUserId: owner.id })
+    await deliver()
+    const post = (await ledger()).find(r => r.kind === 'proposals-open')!
+    expect(post.status, post.error ?? '').toBe('posted')
+    const live = await getRecordLive(post.uri!)
+    const url = `${process.env.NEXT_PUBLIC_APP_URL || base}/e/${gathering.slug}/propose`
+    expect(linksOf(live.value)).toEqual([url])
+    expect(live.value.embed?.external?.uri).toBe(url)
+    const page = await fetch(`${base}/e/${gathering.slug}/propose`, { headers: { cookie: owner.cookie } })
+    expect(page.status).toBe(200)
+    expect(feed.formatWhen('2026-10-03T15:00:00Z', 'America/Denver')).toContain('9:00 AM MDT')
+  })
+
+  test('each published move gets an update, while duplicate callbacks for that revision do not', async () => {
+    const id = await newSession(`Moving session ${RUN}`, host.id)
+    await raw`update sessions set slot_cid = 'revision-one' where id = ${id}`
+    const input = { eventId: gathering.id, kind: 'session-moved' as const, sessionIds: [id], callerUserId: owner.id }
+    expect((await feed.enqueueSessionPosts(input)).queued).toBe(1)
+    await deliver()
+    expect((await feed.enqueueSessionPosts(input)).queued).toBe(0)
+    const nextSlot = slots[slotAt++ % slots.length]!
+    await raw`update sessions set slot_cid = 'revision-two', time_slot_id = ${nextSlot.id}, venue_id = ${nextSlot.venue_id} where id = ${id}`
+    expect((await feed.enqueueSessionPosts(input)).queued).toBe(1)
+    await deliver()
+    expect((await feed.enqueueSessionPosts(input)).queued).toBe(0)
+    const posts = await ledger(id)
+    expect(posts).toHaveLength(2)
+    expect(posts.every(p => p.status === 'posted')).toBe(true)
+    expect(new Set(posts.map(p => p.uri)).size).toBe(2)
+    expect(posts[0]!.text).not.toBe(posts[1]!.text)
+  })
+
+  test('a queued announcement cannot escape when the gathering becomes private', async () => {
+    await feed.enqueueGatheringPost({ eventId: gathering.id, kind: 'voting-open', callerUserId: owner.id })
+    await raw`update events set visibility = 'private' where id = ${gathering.id}`
+    try {
+      const delivery = await feed.deliverQueuedPosts({ eventId: gathering.id, callerUserId: owner.id })
+      expect(delivery.posted).toBe(0)
+      const post = (await ledger()).find(r => r.kind === 'voting-open')!
+      expect(post).toMatchObject({ status: 'failed', uri: null })
+      expect(post.error).toContain('only public gatherings')
+    } finally {
+      await raw`update events set visibility = 'public' where id = ${gathering.id}`
+    }
   })
 
   test('the privacy audit passes with posts present', async () => {
