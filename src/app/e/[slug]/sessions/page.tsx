@@ -12,7 +12,6 @@ import { FilterChip } from '@/components/ui/filter-chip'
 import { RemovableChip } from '@/components/ui/removable-chip'
 import { SegmentedControl } from '@/components/ui/segmented-control'
 import { useToast } from '@/components/ui/toast'
-import { PageHeader } from '@/components/PageHeader'
 import { SessionCard, setFavorite } from '@/components/SessionCard'
 import { DashboardLayout } from '@/components/DashboardLayout'
 import { useAuth } from '@/hooks/useAuth'
@@ -211,23 +210,18 @@ export default function EventSessionsPage() {
 
   const showEmpty = !loadError && !isLoading && sessions.length === 0
   const proposeButton = user && proposalsOpen ? (
-    <Button asChild>
-      <Link href={`/e/${event.slug}/propose`}>Propose a session</Link>
+    <Button asChild size="sm" className="min-h-11 shrink-0 px-3 text-xs sm:text-sm">
+      <Link href={`/e/${event.slug}/propose`}>Submit proposal</Link>
     </Button>
   ) : null
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        <PageHeader
-          title="Sessions"
-          subtitle={
-            votingOpen
-              ? 'Find something that sparks your curiosity. Your votes help shape what happens.'
-              : 'Explore the ideas and people that shaped this gathering.'
-          }
-          actions={proposeButton}
-        />
+      <div className="space-y-4">
+        <div className="flex min-w-0 items-center justify-between gap-2" data-testid="sessions-heading">
+          <h1 className="min-w-0 font-display text-xl font-bold tracking-tight sm:text-3xl">Sessions</h1>
+          {proposeButton}
+        </div>
 
         {mineOnly && (
           <div className="flex flex-wrap items-center gap-3 rounded-xl border bg-muted/30 p-4">
@@ -421,7 +415,6 @@ export default function EventSessionsPage() {
             <div className="mt-4 flex flex-wrap justify-center gap-3">
               {filtersActive && <Button variant="outline" onClick={clearFilters}>Clear filters</Button>}
               {mineOnly && <Button variant="outline" onClick={() => updateMineOnly(false)}>Show all sessions</Button>}
-              {proposeButton}
             </div>
           </div>
         )}
