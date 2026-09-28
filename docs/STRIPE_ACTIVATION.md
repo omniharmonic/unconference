@@ -1,7 +1,13 @@
 # Stripe activation
 
+Update, 28 September 2026: production configuration-presence checks still show no Stripe key
+or webhook secrets. Paid sales are not activated. The [host revenue-sharing audit](SESSION_HOST_REVENUE_SHARING.md)
+also identifies refund-operation identity and revenue-summary accounting work required before
+using ticket revenue to fund distributions. The sandbox results below cover the scenarios listed,
+not those newly identified edge cases.
+
 Status, 25 September 2026: **the direct-charge model is now proven end to end against the
-Stripe sandbox — real money moved in test mode, through the real product.** A sandbox test key
+Stripe sandbox for the scenarios below — sandbox balances moved through real Stripe APIs and the product.** A sandbox test key
 lives in `.env.local` on a developer machine (never in the repository); production still holds
 no Stripe key, no live key exists anywhere, and no real money has moved.
 
