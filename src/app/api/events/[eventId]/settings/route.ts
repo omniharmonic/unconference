@@ -351,7 +351,7 @@ const POLICY_KEYS = [
   'max_proposals_per_user', 'require_proposal_approval', 'policy_thresholds',
 ]
 /** Fields of the public `gathering` record and the gathering's own calendar event. */
-const GATHERING_KEYS = ['name', 'tagline', 'description', 'start_date', 'end_date', 'timezone', 'location_name', 'location_address', 'status']
+const GATHERING_KEYS = ['name', 'tagline', 'description', 'logo_url', 'start_date', 'end_date', 'timezone', 'location_name', 'location_address', 'status']
 
 const JSON_COLUMNS = new Set(['theme', 'policy_thresholds'])
 
@@ -456,6 +456,11 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ ev
     after(() => import('@/lib/atproto/feed').then((f) => f.kickFeedDelivery(savedId)).catch(() => undefined))
   }
   if (saved.actor_did) {
+    if ('logo_url' in update && saved.logo_url !== current.logo_url) {
+      // A PDS may collect a blob after its last profile reference is removed. Forget the
+      // upload cache on a logo change so restoring an earlier logo uploads valid bytes again.
+      await sql`delete from at_blobs where did = ${saved.actor_did}`
+    }
     const alreadyPublished = Boolean(saved.atproto_published_at)
     const gatheringChanged = GATHERING_KEYS.some((key) => key in update)
     const policyChanged = POLICY_KEYS.some((key) => key in update)

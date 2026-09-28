@@ -227,6 +227,16 @@ test.describe('publishing wave 2', () => {
     expect(stillOne).toHaveLength(1)
   })
 
+  test('saving only the logo keeps the Bluesky profile in sync, including removal', async () => {
+    const settings = `/api/events/${gathering.id}/settings`
+    const removed = await api(owner, 'PATCH', settings, { logo_url: null })
+    expect(removed.status).toBe(200)
+    expect((await getRecordLive(gathering.actorDid!, NSID_PROFILE, 'self')).value).not.toHaveProperty('avatar')
+    const restored = await api(owner, 'PATCH', settings, { logo_url: logoUrl })
+    expect(restored.status).toBe(200)
+    expect((await getRecordLive(gathering.actorDid!, NSID_PROFILE, 'self')).value).toHaveProperty('avatar')
+  })
+
   test('a feed post carries the gathering logo as the link card thumb', async () => {
     const published = await api<{ results: Array<{ error?: string }> }>(owner, 'POST', `/api/v1/events/${gathering.slug}/admin/atproto/publish`, { what: 'schedule' })
     expect(published.status, JSON.stringify(published.body)).toBe(200)
@@ -235,7 +245,7 @@ test.describe('publishing wave 2', () => {
     expect(delivered.status, JSON.stringify(delivered.body)).toBe(200)
 
     const [row] = await raw<{ id: string; uri: string | null; status: string; error: string | null }[]>`
-      select id, uri, status, error from feed_posts where event_id = ${gathering.id} and status = 'posted' order by created_at limit 1
+      select id, uri, status, error from feed_posts where event_id = ${gathering.id} and kind = 'session-scheduled' and status = 'posted' order by created_at limit 1
     `
     expect(row, 'a post should have gone out').toBeTruthy()
     expect(row!.error).toBeNull()
