@@ -1,6 +1,21 @@
 import { test, expect } from '@playwright/test'
 import { safeReturnPath } from '../src/lib/auth-redirect'
 import { votesToCredits, nextVoteCost } from '../src/lib/utils'
+import { blueskyHref } from '../src/app/e/[slug]/people/shared'
+
+test('Bluesky profile links preserve the literal DID and respect profile visibility', () => {
+  for (const did of ['did:plc:abcdefghijklmnopqrstuvwx', 'did:web:example.com:users:alice', 'did:web:example.com%3A8443']) {
+    const href = blueskyHref({ did, bluesky: true })
+    expect(href).not.toBeNull()
+    // Bluesky consumes the raw path segment as its actor, without percent-decoding it.
+    expect(new URL(href!).pathname.slice('/profile/'.length)).toBe(did)
+    expect(blueskyHref({ did, bluesky: false })).toBeNull()
+    expect(blueskyHref({ did })).toBeNull()
+  }
+  for (const did of ['', 'did%3Aplc%3Aabcdefghijklmnopqrstuvwx', 'did:plc:abc?x=y', 'did:plc:abc#fragment', 'did:web:example.com/other']) {
+    expect(blueskyHref({ did, bluesky: true })).toBeNull()
+  }
+})
 
 test('sign-in keeps local event destinations and their filters', () => {
   expect(safeReturnPath('/e/community/sessions?track=learning')).toBe('/e/community/sessions?track=learning')

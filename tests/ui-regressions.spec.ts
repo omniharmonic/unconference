@@ -317,7 +317,7 @@ test.describe('a host name leads to their profile', () => {
     ])
     await sql`insert into event_members (event_id, user_id, role) values
                 (${gathering.id}, ${host.id}, 'attendee'), (${gathering.id}, ${viewer.id}, 'owner')`
-    await sql`update profiles set display_name = 'Robin Hostwell', onboarding_completed = true,
+    await sql`update profiles set display_name = 'Robin Hostwell', onboarding_completed = true, publish_profile = true,
                 affiliation = 'Soil Commons', looking_for = 'People running compost sites',
                 interests = ${sql.array([interest, 'Water'])}
               where id = ${host.id}`
@@ -366,6 +366,8 @@ test.describe('a host name leads to their profile', () => {
       await expect(profile.getByRole('heading', { name: 'Robin Hostwell', level: 1 })).toBeVisible()
       await expect(profile.getByText('Soil Commons')).toBeVisible()
       await expect(profile.getByText('People running compost sites')).toBeVisible()
+      await expect(profile.getByRole('link', { name: 'View on Bluesky' }))
+        .toHaveAttribute('href', `https://bsky.app/profile/${host.did}`)
       // The session they host here is listed, and leads back to it.
       await expect(profile.getByRole('link', { name: 'Compost at scale' })).toBeVisible()
 
@@ -376,6 +378,8 @@ test.describe('a host name leads to their profile', () => {
       await expect(page.getByRole('button', { name: interest, pressed: true })).toBeVisible()
       // Robin lists it; the organizer does not, so the chip really narrowed the list.
       await expect(page.getByRole('link', { name: 'Robin Hostwell' })).toBeVisible()
+      await expect(page.getByRole('link', { name: 'View on Bluesky' }))
+        .toHaveAttribute('href', `https://bsky.app/profile/${host.did}`)
       await expect(page.getByRole('link', { name: 'Viewing Organizer' })).toHaveCount(0)
 
       // The sort control writes itself into the URL, so a sorted view is a link.
@@ -388,6 +392,8 @@ test.describe('a host name leads to their profile', () => {
       const dialog = page.getByRole('dialog')
       await expect(dialog.getByRole('link', { name: 'Robin Hostwell' })).toBeVisible()
       await expect(dialog.getByRole('link', { name: 'View full profile' })).toBeVisible()
+      await expect(dialog.getByRole('link', { name: 'View on Bluesky' }))
+        .toHaveAttribute('href', `https://bsky.app/profile/${host.did}`)
       expect(errors).toEqual([])
     } finally {
       await context.close()

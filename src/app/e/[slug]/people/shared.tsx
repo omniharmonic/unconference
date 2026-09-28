@@ -11,6 +11,7 @@
 
 import * as React from 'react'
 import Link from 'next/link'
+import { isValidDid } from '@atproto/syntax'
 import { cn } from '@/lib/utils'
 import { ORGANIZER_ROLES } from '@/lib/labels'
 
@@ -71,7 +72,9 @@ export function peopleHref(slug: string, opts: { interest?: string; sort?: strin
  * publishing is theirs to decide (design §3.5).
  */
 export function blueskyHref(p: Pick<MemberCardData, 'did' | 'bluesky'>): string | null {
-  return p.bluesky ? `https://bsky.app/profile/${encodeURIComponent(p.did)}` : null
+  // Bluesky reads this path segment literally: encoding the colons turns a DID into an
+  // invalid handle. Validate before interpolating so URL delimiters cannot enter the path.
+  return p.bluesky && isValidDid(p.did) ? `https://bsky.app/profile/${p.did}` : null
 }
 
 /**
