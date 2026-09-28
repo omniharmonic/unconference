@@ -45,7 +45,7 @@ export function MobileTabBar({ eventSlug, pathname, onMore, onClose, moreOpen = 
     { href: `${base}/participants`, label: 'People', icon: Users },
     { href: `${base}/my-votes`, label: 'My votes', icon: ClipboardList },
     ...(hasKnowledge ? [{ href: `${base}/ask`, label: 'Ask', icon: MessageCircleQuestion }] : []),
-    ...(signedIn ? [{ href: `${PLATFORM_HOME}#my-gatherings`, label: 'My gatherings', icon: CalendarRange }] : []),
+    ...(signedIn ? [{ href: `${PLATFORM_HOME}#my-gatherings`, label: 'Gatherings', icon: CalendarRange }] : []),
   ]
   const itemClass = 'flex min-w-0 min-h-11 flex-1 flex-col items-center justify-center gap-1 rounded-2xl px-0.5 text-[11px] leading-tight transition-colors hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
 

@@ -193,7 +193,7 @@ test.describe('mobile shell: floating bar, expanded navigation, content layout',
         'People',
         'My votes',
         'Ask',
-        'My gatherings',
+        'Gatherings',
         'Sign out',
       ])
 
